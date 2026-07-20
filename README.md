@@ -1,6 +1,6 @@
 # 🚀 CryptoPulse
 
-**A Production-Grade Real-Time Cryptocurrency Market Intelligence Platform**
+**Real-time cryptocurrency market intelligence platform**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
@@ -8,87 +8,28 @@
 [![Spark](https://img.shields.io/badge/Apache-Spark-orange.svg)](https://spark.apache.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://www.docker.com/)
 
-CryptoPulse is an end-to-end **real-time data engineering, analytics engineering, and data science** platform. It continuously ingests cryptocurrency market events, processes them through a scalable streaming architecture, validates data quality, stores historical and analytical datasets using a Medallion Architecture (Bronze → Silver → Gold), and delivers actionable business insights through interactive dashboards.
-
-Unlike typical portfolio projects that stop at streaming data into Kafka, CryptoPulse is designed as a **production-inspired analytics platform** demonstrating software engineering, data engineering, analytics engineering, and data science best practices — together, end to end.
+CryptoPulse ingests live cryptocurrency market events, streams them through Kafka and Spark Structured Streaming, validates and stores them using a Bronze → Silver → Gold (Medallion) architecture in PostgreSQL, and surfaces business and operational metrics through Power BI and Grafana.
 
 ---
 
 ## Table of Contents
 
-- [Business Problem](#-business-problem)
-- [Project Objectives](#-project-objectives)
-- [System Architecture](#-system-architecture)
-- [Core Features](#-core-features)
-- [Technology Stack](#-technology-stack)
-- [Project Structure](#-project-structure)
-- [Data Architecture](#-data-architecture)
-- [Business KPIs](#-business-kpis)
-- [Data Quality](#-data-quality)
-- [Monitoring](#-monitoring)
-- [Getting Started](#-getting-started)
-- [Testing Strategy](#-testing-strategy)
-- [Agile Development](#-agile-development)
-- [Documentation](#-documentation)
-- [Learning Outcomes](#-learning-outcomes)
-- [Future Enhancements](#-future-enhancements)
-- [License](#-license)
-- [Author](#-author)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Data Layers](#data-layers)
+- [Metrics](#metrics)
+- [Data Quality](#data-quality)
+- [Monitoring](#monitoring)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 📌 Business Problem
-
-Cryptocurrency markets generate thousands of trades every second. Analysts, traders, and fintech companies often struggle to answer questions such as:
-
-- Which assets are becoming unusually volatile?
-- Is trading volume increasing abnormally?
-- Which markets require immediate attention?
-- Are there unusual trading patterns indicating market manipulation?
-- How has today's activity changed compared to historical trends?
-
-Traditional dashboards primarily visualize prices but provide limited operational intelligence. CryptoPulse addresses this by continuously collecting live market events, transforming raw data into business-ready datasets, and producing actionable insights in real time.
-
----
-
-## 🎯 Project Objectives
-
-The project demonstrates an end-to-end production analytics platform by implementing:
-
-- Real-time event ingestion
-- Distributed stream processing
-- Data quality validation
-- Medallion data architecture
-- Analytical data warehouse
-- Business intelligence dashboards
-- Operational monitoring
-- Production-ready software engineering practices
-
-### Target Users
-
-| Audience | Use Case |
-|---|---|
-| Data Engineers | Reference architecture for streaming pipelines |
-| Analytics Engineers | Medallion modeling and warehouse design |
-| Data Scientists | Time-series feature engineering and anomaly detection |
-| Market Analysts | Live and historical trading insight |
-| Trading Teams | Operational and volatility signals |
-| FinTech Startups | Production-inspired blueprint |
-| Engineering Managers | Delivery process and architecture patterns |
-
-### Business Value
-
-- Monitor live market conditions
-- Detect abnormal trading activity
-- Analyze historical trading behavior
-- Build business KPIs in real time
-- Reduce manual data processing
-- Improve operational visibility
-- Support data-driven trading decisions
-
----
-
-## 🏗 System Architecture
+## Architecture
 
 ```text
                  Exchange Connector
@@ -108,107 +49,63 @@ The project demonstrates an end-to-end production analytics platform by implemen
   Data Validation              Dead Letter Queue
          │
          ▼
-  Bronze Data Layer (Raw)
+  Bronze Layer (Raw)
          │
          ▼
-  Silver Data Layer (Validated)
+  Silver Layer (Validated)
          │
          ▼
-  Gold Data Layer (Business Metrics)
+  Gold Layer (Business Metrics)
          │
          ▼
   PostgreSQL Data Warehouse
          │
          ├──────────────┐
          ▼              ▼
-  Business Analytics   Operational Metrics
-         │              │
-         ▼              ▼
-    Power BI         Grafana
+  Power BI          Grafana
 ```
 
----
+**Core components:**
 
-## ✨ Core Features
-
-### Real-Time Data Streaming
-- Live cryptocurrency market ingestion
-- WebSocket streaming with automatic reconnection
-- Fault tolerance and retry strategy
-- Configurable exchange connectors
-
-### Data Engineering
-- Apache Kafka event streaming
-- Spark Structured Streaming
-- Event validation and schema enforcement
-- Window aggregations and feature engineering
-- Dead Letter Queue for invalid records
-- Bronze / Silver / Gold architecture
-
-### Data Storage
-- Bronze Layer (raw)
-- Silver Layer (validated)
-- Gold Layer (business-ready)
-- PostgreSQL data warehouse
-- Historical replay capability
-
-### Business Analytics
-Computed metrics include trading volume, VWAP, moving average, price momentum, volatility, trade frequency, liquidity metrics, market trends, and rolling aggregations.
-
-### Data Science
-- Statistical anomaly detection
-- Volatility detection
-- Trend analysis
-- Time-series feature engineering
-- Market event identification
-
-### Dashboards
-
-| Dashboard | Contents |
-|---|---|
-| **Executive** | Market overview, trading volume, top gainers/losers, market health |
-| **Analyst** | Candlestick charts, VWAP, volatility, rolling averages, trading distribution |
-| **Engineering** | Kafka health, consumer lag, pipeline status, data quality, system metrics |
+- **Exchange connector** — WebSocket clients for Coinbase/Binance/Kraken with automatic reconnection and retry logic
+- **Producer** — publishes normalized market events to Kafka
+- **Spark Structured Streaming** — consumes, validates, and aggregates events in real time
+- **Dead Letter Queue** — captures records that fail schema/data-quality checks
+- **PostgreSQL warehouse** — stores Silver/Gold tables for analytics and BI
 
 ---
 
-## 🛠 Technology Stack
+## Tech Stack
 
 | Category | Tools |
 |---|---|
-| Programming | Python |
+| Language | Python |
 | Streaming | Apache Kafka |
 | Stream Processing | Apache Spark Structured Streaming |
 | Storage | PostgreSQL, Apache Iceberg, Parquet |
 | Infrastructure | Docker, Docker Compose |
 | Analytics | SQL, Pandas |
 | Monitoring | Grafana, Prometheus |
-| Business Intelligence | Power BI |
-| Version Control | Git, GitHub |
+| BI | Power BI |
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 cryptopulse/
-├── configs/
-├── producer/
-├── consumer/
-├── spark/
-├── warehouse/
-├── analytics/
-├── dashboard/
-├── monitoring/
-├── docker/
-├── docs/
-│   ├── architecture/
-│   ├── diagrams/
-│   ├── adr/
-│   └── reports/
-├── scripts/
-├── tests/
-├── .github/
+├── configs/          # environment & connector configs
+├── producer/         # exchange connectors + Kafka producer
+├── consumer/         # Kafka consumers
+├── spark/            # Structured Streaming jobs (validation, aggregation)
+├── warehouse/        # PostgreSQL schema, migrations
+├── analytics/        # SQL models, KPI queries
+├── dashboard/        # Power BI / Grafana dashboard definitions
+├── monitoring/       # Prometheus config, Grafana provisioning
+├── docker/           # Dockerfiles
+├── docs/             # architecture, ADRs, data dictionary
+├── scripts/          # utility scripts
+├── tests/            # unit/integration/e2e tests
 ├── docker-compose.yml
 ├── requirements.txt
 ├── Makefile
@@ -217,75 +114,13 @@ cryptopulse/
 
 ---
 
-## 🏛 Data Architecture
-
-CryptoPulse follows the **Medallion Architecture**.
-
-### Bronze Layer — Raw
-Raw, immutable market events, kept for historical archive, replay capability, and auditability.
-
-### Silver Layer — Validated
-Cleaned and validated data: schema validation, deduplication, missing-value handling, and data quality checks.
-
-### Gold Layer — Business Ready
-Business-ready datasets, including minute candles, hourly aggregations, daily metrics, trading KPIs, and analytical tables.
-
----
-
-## 📈 Business KPIs
-
-The platform continuously computes:
-
-- Average price
-- Trading volume
-- Trades per minute
-- VWAP
-- Moving average
-- Volatility index
-- Largest trades
-- Market momentum
-- Liquidity indicators
-
----
-
-## 🔍 Data Quality
-
-Every incoming event is validated for:
-
-- Required fields
-- Schema compliance
-- Duplicate events
-- Invalid timestamps
-- Invalid prices
-- Missing values
-- Negative quantities
-
-Invalid records are redirected to a **Dead Letter Queue** for investigation.
-
----
-
-## 📊 Monitoring
-
-The platform exposes operational metrics including:
-
-- Producer health
-- Kafka consumer lag
-- Messages per second
-- Failed messages
-- Processing latency
-- Data quality score
-- Storage utilization
-- Spark job status
-
----
-
-## ⚡ Getting Started
+## Getting Started
 
 ### Prerequisites
 
 - Docker & Docker Compose
 - Python 3.11+
-- Make (optional, for convenience commands)
+- Make (optional)
 
 ### Setup
 
@@ -300,7 +135,7 @@ cp configs/.env.example .env
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Start the full stack (Kafka, Spark, PostgreSQL, Grafana, Prometheus)
+# Start the stack (Kafka, Spark, PostgreSQL, Grafana, Prometheus)
 docker compose up -d
 
 # Verify services are healthy
@@ -315,104 +150,112 @@ make run-producer
 
 # Start the Spark Structured Streaming job
 make run-spark
-
-# View dashboards
-# Grafana:   http://localhost:3000
-# Power BI:  connect to the PostgreSQL warehouse
 ```
 
-> Update the commands above to match your actual `Makefile` targets and service ports once implemented.
+- Grafana: `http://localhost:3000`
+- Power BI: connect directly to the PostgreSQL warehouse
+
+> Update commands, targets, and ports above to match your actual `Makefile` and `docker-compose.yml` once implemented.
 
 ---
 
-## 🧪 Testing Strategy
+## Configuration
 
-- Unit tests
-- Integration tests
-- End-to-end tests
-- Data validation tests
-- Pipeline verification
-- Replay testing
+Environment variables are defined in `configs/.env.example`. Key settings typically include:
 
----
+```bash
+# Exchange connector
+EXCHANGE=coinbase
+SYMBOLS=BTC-USD,ETH-USD
 
-## 📅 Agile Development
+# Kafka
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+KAFKA_TOPIC=market-events
 
-Development follows a Scrum-inspired sprint structure:
-
-| Sprint | Focus |
-|---|---|
-| Sprint 0 | Product Discovery |
-| Sprint 1 | Infrastructure |
-| Sprint 2 | Streaming Ingestion |
-| Sprint 3 | Stream Processing |
-| Sprint 4 | Data Lake & Warehouse |
-| Sprint 5 | Analytics & Data Science |
-| Sprint 6 | Business Intelligence |
-| Sprint 7 | Production Readiness |
-| Sprint 8 | Documentation & Portfolio |
+# PostgreSQL
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=cryptopulse
+POSTGRES_USER=cryptopulse
+POSTGRES_PASSWORD=changeme
+```
 
 ---
 
-## 📚 Documentation
+## Data Layers
 
-The `/docs` directory contains:
+CryptoPulse follows a Medallion architecture:
 
-- Product Requirements Document (PRD)
-- Architecture diagrams
-- Data flow diagrams
-- Sequence diagrams
-- Deployment architecture
-- ADRs (Architecture Decision Records)
-- Data dictionary
-- Business reports
-- Sprint documentation
+| Layer | Purpose | Contents |
+|---|---|---|
+| **Bronze** | Raw, immutable ingestion | Unmodified exchange events, kept for replay/audit |
+| **Silver** | Validated, cleaned data | Schema-checked, deduplicated, missing values handled |
+| **Gold** | Business-ready datasets | Minute candles, hourly/daily aggregations, trading KPIs |
 
 ---
 
-## 🎯 Learning Outcomes
+## Metrics
 
-This project demonstrates practical experience with:
+Computed continuously from the Gold layer:
 
-- Data engineering
-- Streaming systems
-- Analytics engineering
-- Data warehousing
-- Data quality
-- Distributed processing
-- Software engineering
-- Business intelligence
-- Data science
-- Production monitoring
-- Agile development
+- Average price, trading volume, trades/minute
+- VWAP, moving average
+- Volatility index, market momentum
+- Largest trades, liquidity indicators
 
 ---
 
-## 🔮 Future Enhancements
+## Data Quality
 
-- [ ] Multi-exchange support
-- [ ] Machine learning-based anomaly detection
-- [ ] Real-time alerting
-- [ ] Stream processing with Apache Flink
-- [ ] Kubernetes deployment
-- [ ] Cloud-native deployment (AWS/Azure/GCP)
-- [ ] dbt transformation layer
-- [ ] Data lineage with OpenMetadata
-- [ ] Feature store integration
+Every incoming event is validated for:
 
----
+- Required fields and schema compliance
+- Duplicate events
+- Invalid timestamps or prices
+- Missing values, negative quantities
 
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+Records that fail validation are routed to a Dead Letter Queue rather than dropped.
 
 ---
 
-## 👨‍💻 Author
+## Monitoring
 
-**Pratham Gavadia**
-Computer Science Engineering Student | Data Engineering | Data Science | Machine Learning | AI Systems
+Exposed operational metrics:
+
+- Producer health, Kafka consumer lag
+- Messages/sec, failed messages, processing latency
+- Data quality score
+- Storage utilization, Spark job status
 
 ---
 
-> CryptoPulse is a production-inspired streaming analytics platform built to demonstrate real-world data engineering, analytics engineering, and data science workflows using modern open-source technologies.
+## Testing
+
+```bash
+# Run the full test suite
+make test
+
+# Or with pytest directly
+pytest tests/
+```
+
+Coverage includes unit tests, integration tests, end-to-end pipeline tests, data validation tests, and replay testing.
+
+---
+
+## Contributing
+
+1. Fork the repo and create a feature branch
+2. Follow the existing project structure and code style
+3. Add/update tests for any new functionality
+4. Open a pull request with a clear description of the change
+
+---
+
+## License
+
+Licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">Made with ❤️ by an aspiring developer</p>
