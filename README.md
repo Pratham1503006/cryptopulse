@@ -1,261 +1,244 @@
 # 🚀 CryptoPulse
 
-**Real-time cryptocurrency market intelligence platform**
+> **A production-inspired data engineering project built to understand how modern real-time streaming platforms actually work.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Kafka](https://img.shields.io/badge/Apache-Kafka-black.svg)](https://kafka.apache.org/)
-[![Spark](https://img.shields.io/badge/Apache-Spark-orange.svg)](https://spark.apache.org/)
+[![Apache Kafka](https://img.shields.io/badge/Apache-Kafka-black.svg)](https://kafka.apache.org/)
+[![Apache Spark](https://img.shields.io/badge/Apache-Spark-orange.svg)](https://spark.apache.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://www.docker.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1.svg)](https://www.postgresql.org/)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800.svg)](https://grafana.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C.svg)](https://prometheus.io/)
 
-CryptoPulse ingests live cryptocurrency market events, streams them through Kafka and Spark Structured Streaming, validates and stores them using a Bronze → Silver → Gold (Medallion) architecture in PostgreSQL, and surfaces business and operational metrics through Power BI and Grafana.
+<p align="center">
+  <img src="docs/assets/images/architecture/overview.png" alt="CryptoPulse Architecture">
+</p>
 
 ---
 
-## Table of Contents
+## Why I built this
 
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Data Layers](#data-layers)
-- [Metrics](#metrics)
-- [Data Quality](#data-quality)
-- [Monitoring](#monitoring)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+Most data engineering portfolio projects prove that data can move from an API to a dashboard.
+
+I became much more interested in everything that happens before that.
+
+How do you continuously ingest streaming data? What happens when the connection drops? How do you validate events before they reach analytics? How do you monitor the health of a streaming pipeline? How do you build something another engineer can actually reproduce?
+
+CryptoPulse is my attempt to answer those questions by building the platform instead of only reading about it.
+
+The project uses live cryptocurrency market data because it's freely available and produces a continuous stream of real-time events. The engineering ideas behind the platform aren't specific to crypto—they're the same kinds of problems you'd encounter when working with application logs, IoT sensors, financial transactions, manufacturing telemetry, or other streaming systems.
+
+---
+
+## What is CryptoPulse?
+
+CryptoPulse is an end-to-end streaming data platform that continuously ingests live market events, processes them through an event-driven pipeline, validates and transforms them into analytics-ready datasets, and exposes both business insights and operational health.
+
+The dashboard is simply the final consumer.
+
+The pipeline itself is the interesting part.
+
+---
+
+## Features
+
+* 📡 Consume live cryptocurrency market events using public WebSocket APIs
+* ⚡ Stream events through Apache Kafka
+* 🔄 Process data using Spark Structured Streaming
+* ✅ Validate events and isolate invalid records using a Dead Letter Queue
+* 🥉🥈🥇 Organize data using a Bronze → Silver → Gold (Medallion) architecture
+* 🗄️ Store curated datasets in PostgreSQL
+* 📊 Build business dashboards using Power BI
+* 📈 Monitor pipeline health with Prometheus and Grafana
+* 🐳 Run the complete platform locally with Docker Compose
+* 📖 Document the engineering decisions behind the implementation
 
 ---
 
 ## Architecture
 
+The complete architecture, component interactions, and data flow are documented under **`docs/architecture/`**.
+
 ```text
-                 Exchange Connector
-        (Coinbase / Binance / Kraken)
-                       │
-                       ▼
-             Python Streaming Producer
-                       │
-                       ▼
-                 Apache Kafka Cluster
-                       │
-                       ▼
-          Spark Structured Streaming
-                       │
-         ┌─────────────┴─────────────┐
-         ▼                           ▼
-  Data Validation              Dead Letter Queue
-         │
-         ▼
-  Bronze Layer (Raw)
-         │
-         ▼
-  Silver Layer (Validated)
-         │
-         ▼
-  Gold Layer (Business Metrics)
-         │
-         ▼
-  PostgreSQL Data Warehouse
-         │
-         ├──────────────┐
-         ▼              ▼
-  Power BI          Grafana
+Exchange Connector
+        │
+        ▼
+Python Producer
+        │
+        ▼
+Apache Kafka
+        │
+        ▼
+Spark Structured Streaming
+        │
+        ▼
+Validation
+        │
+        ▼
+Bronze → Silver → Gold
+        │
+        ▼
+PostgreSQL
+   ┌──────────┴──────────┐
+   ▼                     ▼
+Power BI             Grafana
 ```
 
-**Core components:**
+---
 
-- **Exchange connector** — WebSocket clients for Coinbase/Binance/Kraken with automatic reconnection and retry logic
-- **Producer** — publishes normalized market events to Kafka
-- **Spark Structured Streaming** — consumes, validates, and aggregates events in real time
-- **Dead Letter Queue** — captures records that fail schema/data-quality checks
-- **PostgreSQL warehouse** — stores Silver/Gold tables for analytics and BI
+## Technology Stack
+
+| Category              | Technology                        |
+| --------------------- | --------------------------------- |
+| Language              | Python 3.11+                      |
+| Streaming             | Apache Kafka                      |
+| Stream Processing     | Apache Spark Structured Streaming |
+| Storage               | PostgreSQL                        |
+| File Format           | Apache Parquet                    |
+| Infrastructure        | Docker & Docker Compose           |
+| Monitoring            | Prometheus, Grafana               |
+| Analytics             | SQL, Pandas                       |
+| Business Intelligence | Power BI                          |
+| Testing               | Pytest                            |
 
 ---
 
-## Tech Stack
-
-| Category | Tools |
-|---|---|
-| Language | Python |
-| Streaming | Apache Kafka |
-| Stream Processing | Apache Spark Structured Streaming |
-| Storage | PostgreSQL, Apache Iceberg, Parquet |
-| Infrastructure | Docker, Docker Compose |
-| Analytics | SQL, Pandas |
-| Monitoring | Grafana, Prometheus |
-| BI | Power BI |
-
----
-
-## Project Structure
+## Repository Structure
 
 ```text
 cryptopulse/
-├── configs/          # environment & connector configs
-├── producer/         # exchange connectors + Kafka producer
-├── consumer/         # Kafka consumers
-├── spark/            # Structured Streaming jobs (validation, aggregation)
-├── warehouse/        # PostgreSQL schema, migrations
-├── analytics/        # SQL models, KPI queries
-├── dashboard/        # Power BI / Grafana dashboard definitions
-├── monitoring/       # Prometheus config, Grafana provisioning
-├── docker/           # Dockerfiles
-├── docs/             # architecture, ADRs, data dictionary
-├── scripts/          # utility scripts
-├── tests/            # unit/integration/e2e tests
+│
+├── producer/              # Exchange connectors & Kafka producer
+├── spark/                 # Stream processing jobs
+├── warehouse/             # Database schema & persistence
+├── analytics/             # SQL models & business metrics
+├── monitoring/            # Prometheus & Grafana
+├── docker/                # Docker configuration
+├── tests/                 # Unit, integration & end-to-end tests
+│
+├── docs/
+│   ├── overview/
+│   ├── architecture/
+│   ├── engineering/
+│   ├── data/
+│   └── adr/
+│
 ├── docker-compose.yml
 ├── requirements.txt
-├── Makefile
 └── README.md
 ```
 
 ---
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Python 3.11+
-- Make (optional)
+* Docker & Docker Compose
+* Python 3.11+
 
-### Setup
+### Clone the repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/<your-username>/cryptopulse.git
+
 cd cryptopulse
-
-# Copy and configure environment variables
-cp configs/.env.example .env
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Start the stack (Kafka, Spark, PostgreSQL, Grafana, Prometheus)
-docker compose up -d
-
-# Verify services are healthy
-docker compose ps
 ```
 
-### Running the Pipeline
+### Configure the environment
 
 ```bash
-# Start the exchange connector + producer
+cp configs/.env.example .env
+```
+
+### Install Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Start the infrastructure
+
+```bash
+docker compose up -d
+```
+
+### Start the streaming pipeline
+
+```bash
 make run-producer
 
-# Start the Spark Structured Streaming job
 make run-spark
 ```
 
-- Grafana: `http://localhost:3000`
-- Power BI: connect directly to the PostgreSQL warehouse
+Once everything is running:
 
-> Update commands, targets, and ports above to match your actual `Makefile` and `docker-compose.yml` once implemented.
-
----
-
-## Configuration
-
-Environment variables are defined in `configs/.env.example`. Key settings typically include:
-
-```bash
-# Exchange connector
-EXCHANGE=coinbase
-SYMBOLS=BTC-USD,ETH-USD
-
-# Kafka
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-KAFKA_TOPIC=market-events
-
-# PostgreSQL
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=cryptopulse
-POSTGRES_USER=cryptopulse
-POSTGRES_PASSWORD=changeme
-```
+| Service               | URL                   |
+| --------------------- | --------------------- |
+| Grafana               | http://localhost:3000 |
+| Spark UI              | http://localhost:4040 |
+| Kafka UI *(optional)* | http://localhost:8080 |
 
 ---
 
-## Data Layers
+## Documentation
 
-CryptoPulse follows a Medallion architecture:
+One of the goals of this repository is to document the engineering process—not just the finished implementation.
 
-| Layer | Purpose | Contents |
-|---|---|---|
-| **Bronze** | Raw, immutable ingestion | Unmodified exchange events, kept for replay/audit |
-| **Silver** | Validated, cleaned data | Schema-checked, deduplicated, missing values handled |
-| **Gold** | Business-ready datasets | Minute candles, hourly/daily aggregations, trading KPIs |
+The documentation is organised by responsibility.
 
----
+| Directory            | Description                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| `docs/overview/`     | Project overview, design goals, scope, and roadmap                       |
+| `docs/architecture/` | System architecture, deployment, components, and data flow               |
+| `docs/engineering/`  | Development workflow, testing, monitoring, deployment, and operations    |
+| `docs/data/`         | Schemas, validation rules, Medallion architecture, and analytical models |
+| `docs/adr/`          | Architecture Decision Records documenting important design choices       |
 
-## Metrics
-
-Computed continuously from the Gold layer:
-
-- Average price, trading volume, trades/minute
-- VWAP, moving average
-- Volatility index, market momentum
-- Largest trades, liquidity indicators
+If you're exploring the repository for the first time, I'd recommend starting with **`docs/overview/`** before diving into the implementation.
 
 ---
 
-## Data Quality
+## Current Status
 
-Every incoming event is validated for:
+🚧 **Version 1 — In Development**
 
-- Required fields and schema compliance
-- Duplicate events
-- Invalid timestamps or prices
-- Missing values, negative quantities
+The current focus is building a complete streaming platform that can:
 
-Records that fail validation are routed to a Dead Letter Queue rather than dropped.
+* continuously ingest live events
+* validate streaming data
+* process events in real time
+* produce analytics-ready datasets
+* expose operational metrics
+* be reproduced by another developer using only the documentation
 
----
-
-## Monitoring
-
-Exposed operational metrics:
-
-- Producer health, Kafka consumer lag
-- Messages/sec, failed messages, processing latency
-- Data quality score
-- Storage utilization, Spark job status
-
----
-
-## Testing
-
-```bash
-# Run the full test suite
-make test
-
-# Or with pytest directly
-pytest tests/
-```
-
-Coverage includes unit tests, integration tests, end-to-end pipeline tests, data validation tests, and replay testing.
+The implementation boundaries for Version 1 are documented in **`docs/overview/project-scope.md`**.
 
 ---
 
 ## Contributing
 
-1. Fork the repo and create a feature branch
-2. Follow the existing project structure and code style
-3. Add/update tests for any new functionality
-4. Open a pull request with a clear description of the change
+Suggestions, discussions, and improvements are always welcome.
+
+If you'd like to contribute:
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Add or update tests where appropriate.
+5. Open a pull request with a clear description of what changed and why.
 
 ---
 
 ## License
 
-Licensed under the [MIT License](LICENSE).
+This project is licensed under the **MIT License**.
+
+See the **LICENSE** file for details.
 
 ---
 
-<p align="center">Made with ❤️ by an aspiring developer</p>
+<p align="center">
+Built while learning how modern streaming data platforms are engineered—from ingestion to analytics.
+</p>
