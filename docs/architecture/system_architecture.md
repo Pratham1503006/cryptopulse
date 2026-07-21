@@ -45,21 +45,21 @@ Alongside this journey, every major component emits operational telemetry so the
                      Streaming Backbone
                               │
                               ▼
-                     Bronze Dataset
+                      Bronze Layer
                   (Raw Landing Zone)
                               │
                               ▼
                     Validation Engine
                     ┌─────────┴──────────┐
                     ▼                    ▼
-          Silver Dataset        Quarantine Dataset
+          Silver Layer        Quarantine Layer
           (Trusted Data)      (Rejected Events)
                     │
                     ▼
                Processing Engine
                     │
                     ▼
-                Gold Dataset
+                Gold Layer
           (Business-Ready Data)
                     │
                     ▼
@@ -113,7 +113,7 @@ From this point onward, the rest of the platform no longer depends on exchange-s
 
 ## 3. Data Preservation
 
-Once an event has entered the platform successfully, it is preserved in the Bronze dataset.
+Once an event has entered the platform successfully, it is preserved in the  Bronze Layer.
 
 Bronze acts as the platform's landing zone.
 
@@ -127,9 +127,9 @@ Preserving data before applying quality rules ensures that the platform always r
 
 The Validation Engine determines whether an event is suitable for trusted analytical use.
 
-Events that satisfy the platform's quality expectations continue into the Silver dataset.
+Events that satisfy the platform's quality expectations continue into the Silver Layer.
 
-Events that fail validation are routed to the Quarantine dataset where they remain available for investigation.
+Events that fail validation are routed to the Quarantine Layer where they remain available for investigation.
 
 Removing an event from the trusted pipeline should never mean silently losing it.
 
@@ -143,13 +143,13 @@ Business calculations, aggregations, and derived metrics are performed after val
 
 This separation keeps business logic independent from data quality rules and ensures analytical outputs are always derived from trusted inputs.
 
-The result of this stage is the Gold dataset.
+The result of this stage is the Gold Layer.
 
  
 
 ## 6. Data Consumption
 
-The Gold dataset is consumed by dashboards, reports, analytical tools, or future downstream services.
+The Gold Layer is consumed by dashboards, reports, analytical tools, or future downstream services.
 
 Consumers should not need to understand how the platform produced the data.
 

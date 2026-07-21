@@ -48,7 +48,7 @@ Every component depends on configuration, but no component owns it.
 
 Connection settings, runtime behaviour, validation rules, and environment-specific values remain external to the implementation.
 
-How configuration is supplied is described in the Deployment Architecture document.
+How configuration is supplied is described in the implementation documentation.
 
 
 
@@ -125,7 +125,7 @@ As additional exchanges are introduced, exchange-specific translation logic shou
 
 
 
-# Bronze Dataset
+# Bronze Layer
 
 ## Why this component exists
 
@@ -161,7 +161,7 @@ The Validation Engine is responsible for deciding whether an event is suitable f
 * Apply data quality rules.
 * Detect malformed or duplicate events.
 * Separate trusted events from rejected events.
-* Route rejected events to the Quarantine Dataset.
+* Route rejected events to the Quarantine Layer.
 
 ### It deliberately does **not**
 
@@ -173,7 +173,7 @@ The Validation Engine is responsible for deciding whether an event is suitable f
 
 Validation failures do not stop the pipeline.
 
-Trusted events continue to Silver while rejected events remain available for investigation in the Quarantine Dataset.
+Trusted events continue to Silver while rejected events remain available for investigation in the Quarantine Layer.
 
 ### Future evolution
 
@@ -181,13 +181,13 @@ Validation rules are expected to evolve over time, but the responsibility of thi
 
 
 
-# Quarantine Dataset
+# Quarantine Layer
 
 ## Why this component exists
 
 Rejecting an event should never mean losing it.
 
-The Quarantine Dataset preserves events that could not continue through the trusted pipeline so they can be inspected, understood, and, where appropriate, replayed after the underlying issue has been resolved.
+The Quarantine Layer preserves events that could not continue through the trusted pipeline so they can be inspected, understood, and, where appropriate, replayed after the underlying issue has been resolved.
 
 ### Responsibilities
 
@@ -203,7 +203,7 @@ The Quarantine Dataset preserves events that could not continue through the trus
 
 
 
-# Silver Dataset
+# Silver Layer
 
 ## Why this component exists
 
@@ -256,7 +256,7 @@ New analytical calculations can be introduced without changing the responsibilit
 
 
 
-# Gold Dataset
+# Gold Layer
 
 ## Why this component exists
 
@@ -298,7 +298,7 @@ Keeping them independent allows each to evolve without affecting the other.
 
 
 
-### Why keep a Quarantine Dataset?
+### Why keep a Quarantine Layer?
 
 Rejected events often contain valuable information about upstream issues.
 

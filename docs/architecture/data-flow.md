@@ -83,7 +83,7 @@ The event has now become an internal event.
 
 Before the platform decides whether an event can be trusted, it first preserves what it successfully received.
 
-The event is written to the Bronze Dataset.
+The event is written to the  Bronze Layer.
 
 This is a deliberate architectural decision.
 
@@ -109,7 +109,7 @@ From here, the journey splits.
 
 # Trusted path
 
-If validation succeeds, the event is written to the Silver Dataset.
+If validation succeeds, the event is written to the Silver Layer.
 
 Silver represents trusted operational data.
 
@@ -119,7 +119,7 @@ The Processing Engine consumes trusted events from Silver and performs the busin
 
 These transformations may include aggregations, derived metrics, rolling calculations, or other business logic.
 
-The resulting outputs are written to the Gold Dataset.
+The resulting outputs are written to the Gold Layer.
 
 Gold no longer represents individual market events.
 
@@ -133,7 +133,7 @@ This is the data consumed by dashboards, reports, and analytical tools.
 
 Not every event reaches Silver.
 
-If validation determines that an event cannot be trusted, it is written to the Quarantine Dataset instead.
+If validation determines that an event cannot be trusted, it is written to the Quarantine Layer instead.
 
 Quarantine exists to preserve visibility into failures.
 
@@ -141,7 +141,7 @@ Rejected events should never disappear silently.
 
 Keeping them separate from trusted data protects downstream consumers while allowing engineers to investigate why an event was rejected and whether the underlying issue should be corrected.
 
-The Quarantine Dataset is part of the platform's operational history, not part of its analytical data.
+The Quarantine Layer is part of the platform's operational history, not part of its analytical data.
 
  
 
