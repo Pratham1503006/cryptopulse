@@ -8,7 +8,7 @@ This document explains what CryptoPulse is, the engineering problem it's trying 
 
 Before looking at the architecture or the code, it's worth understanding why this project exists in the first place.
 
----
+ 
 
 ## What is CryptoPulse?
 
@@ -22,7 +22,7 @@ The dashboard is only the final output.
 
 The interesting part is everything that happens before the data reaches it.
 
----
+ 
 
 ## Why cryptocurrency?
 
@@ -34,7 +34,7 @@ If the underlying engineering is sound, the same architecture could be applied t
 
 The data source is simply a way of exercising the platform under realistic conditions.
 
----
+ 
 
 ## The problem this project explores
 
@@ -71,7 +71,7 @@ Those are the questions that interest me most.
 
 CryptoPulse exists to build those parts of the system deliberately, document the decisions behind them, and understand the trade-offs instead of hiding them behind a finished dashboard.
 
----
+ 
 
 ## What this project is not
 
@@ -85,7 +85,7 @@ The goal here is to understand how a production-inspired streaming data platform
 
 If the underlying engineering is reliable, the same ideas should extend well beyond cryptocurrency.
 
----
+ 
 
 ## What this repository documents
 

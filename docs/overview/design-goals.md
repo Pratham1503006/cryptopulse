@@ -16,7 +16,7 @@ Whenever there are multiple valid solutions, these principles should help determ
 
 They are intentionally independent of any specific technology or implementation.
 
----
+ 
 
 ## Principle 1 — Reliability comes before features
 
@@ -28,7 +28,7 @@ Whenever I'm choosing between expanding the platform and making an existing comp
 
 A smaller platform that consistently behaves as expected is more valuable than a larger platform that's difficult to trust.
 
----
+ 
 
 ## Principle 2 — Complexity must be justified
 
@@ -46,7 +46,7 @@ Before introducing another component, I should be able to answer three questions
 
 If those questions can't be answered clearly, the simpler solution is probably the better one.
 
----
+ 
 
 ## Principle 3 — Make the flow of data explicit
 
@@ -63,7 +63,7 @@ At any point in the pipeline, I should be able to explain:
 
 If I can't explain that flow, the system is hiding too much complexity.
 
----
+ 
 
 ## Principle 4 — Design for failure, not perfection
 
@@ -83,7 +83,7 @@ They should be treated as normal operating conditions.
 
 The platform should make failures visible, recover where appropriate, and preserve enough information to understand what happened.
 
----
+ 
 
 ## Principle 5 — Observability is a core feature
 
@@ -101,7 +101,7 @@ The platform should make it easy to answer questions such as:
 
 If those answers require reading source code or manually inspecting logs, the platform isn't observable enough.
 
----
+ 
 
 ## Principle 6 — Reproducibility is part of correctness
 
@@ -113,7 +113,7 @@ If that isn't possible, the project isn't truly complete.
 
 Reproducibility applies equally to infrastructure, configuration, documentation, and code.
 
----
+ 
 
 ## Using these principles
 

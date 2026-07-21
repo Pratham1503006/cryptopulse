@@ -14,7 +14,7 @@ Nothing in this document is a commitment.
 
 It's simply the direction I believe the project should move once the current release is complete.
 
----
+ 
 
 # Current Release
 
@@ -28,7 +28,7 @@ The implementation boundaries for this release are intentionally fixed and are d
 
 Until Version 1 is complete, expanding the platform takes lower priority than finishing it well.
 
----
+ 
 
 # Version 2 — Strengthen the Platform
 
@@ -44,7 +44,7 @@ Current areas of interest include:
 
 The objective of Version 2 is to improve the quality of the platform without fundamentally changing its architecture.
 
----
+ 
 
 # Version 3 — Challenge the Architecture
 
@@ -62,7 +62,7 @@ Possible areas of exploration include:
 
 The purpose of this version is to validate architectural decisions through experience rather than assumptions.
 
----
+ 
 
 # Future Exploration
 
@@ -84,7 +84,7 @@ Current areas of interest include:
 
 These ideas will only be considered once they solve a real problem encountered during development rather than being added for their own sake.
 
----
+ 
 
 # How this roadmap evolves
 

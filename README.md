@@ -15,7 +15,7 @@
   <img src="docs/assets/images/architecture/overview.png" alt="CryptoPulse Architecture">
 </p>
 
----
+
 
 ## Why I built this
 
@@ -29,7 +29,7 @@ CryptoPulse is my attempt to answer those questions by building the platform ins
 
 The project uses live cryptocurrency market data because it's freely available and produces a continuous stream of real-time events. The engineering ideas behind the platform aren't specific to crypto—they're the same kinds of problems you'd encounter when working with application logs, IoT sensors, financial transactions, manufacturing telemetry, or other streaming systems.
 
----
+
 
 ## What is CryptoPulse?
 
@@ -39,7 +39,7 @@ The dashboard is simply the final consumer.
 
 The pipeline itself is the interesting part.
 
----
+
 
 ## Features
 
@@ -54,7 +54,7 @@ The pipeline itself is the interesting part.
 * 🐳 Run the complete platform locally with Docker Compose
 * 📖 Document the engineering decisions behind the implementation
 
----
+
 
 ## Architecture
 
@@ -102,7 +102,7 @@ Power BI             Grafana
 | Business Intelligence | Power BI                          |
 | Testing               | Pytest                            |
 
----
+
 
 ## Repository Structure
 
@@ -129,7 +129,7 @@ cryptopulse/
 └── README.md
 ```
 
----
+
 
 ## Quick Start
 
@@ -180,7 +180,7 @@ Once everything is running:
 | Spark UI              | http://localhost:4040 |
 | Kafka UI *(optional)* | http://localhost:8080 |
 
----
+
 
 ## Documentation
 
@@ -198,7 +198,6 @@ The documentation is organised by responsibility.
 
 If you're exploring the repository for the first time, I'd recommend starting with **`docs/overview/`** before diving into the implementation.
 
----
 
 ## Current Status
 
@@ -215,8 +214,6 @@ The current focus is building a complete streaming platform that can:
 
 The implementation boundaries for Version 1 are documented in **`docs/overview/project-scope.md`**.
 
----
-
 ## Contributing
 
 Suggestions, discussions, and improvements are always welcome.
@@ -229,7 +226,7 @@ If you'd like to contribute:
 4. Add or update tests where appropriate.
 5. Open a pull request with a clear description of what changed and why.
 
----
+
 
 ## License
 
@@ -237,7 +234,7 @@ This project is licensed under the **MIT License**.
 
 See the **LICENSE** file for details.
 
----
+
 
 <p align="center">
 Built while learning how modern streaming data platforms are engineered—from ingestion to analytics.

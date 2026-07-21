@@ -2,389 +2,314 @@
 
 ## Why this document exists
 
-The System Architecture document describes CryptoPulse from a distance.
+The System Architecture document describes CryptoPulse from a high level.
 
-This document zooms in one level and explains what each major part of the platform is responsible for.
+This document zooms in one layer and explains the major building blocks that make that architecture work.
 
-Rather than focusing on technologies or deployment, it describes the logical components that make up the platform, how they interact with one another, and the boundaries between their responsibilities.
+Rather than focusing on technologies, it focuses on responsibilities.
 
-Each component exists to solve one problem well.
+Each component exists for one reason. Keeping those responsibilities separate makes the platform easier to understand, easier to test, and easier to change as it grows.
 
-Keeping those responsibilities separate makes the platform easier to understand today and easier to evolve tomorrow.
 
----
 
 # Relationship to the System Architecture
 
-The System Architecture document describes CryptoPulse as a sequence of architectural layers.
+The responsibilities described in the System Architecture are implemented here as logical components.
 
-This document refines those layers into the logical components that implement them.
+Some architectural responsibilities map directly to a single component.
 
-One example is **Event Ingestion**.
+Others are intentionally split into smaller responsibilities.
 
-At the architectural level it appears as a single layer.
+For example, **Event Ingestion** is represented by two components:
 
-Here, that layer is intentionally split into two logical components:
+* **Exchange Connector**, responsible for communicating with external event sources.
+* **Event Preparation**, responsible for translating external messages into CryptoPulse's internal event model.
 
-* **Exchange Connector**, which communicates with external event sources.
-* **Event Preparation**, which converts exchange-specific messages into CryptoPulse's internal event model.
+Splitting these responsibilities means that supporting a new exchange should only require changes in one part of the platform instead of many.
 
-Keeping those responsibilities separate means the rest of the platform never needs to understand how individual exchanges structure their data.
-
-The remaining architectural layers follow the same idea. Each one is represented by the logical component responsible for that part of the system.
-
----
-
-# Component Overview
-
-The platform is organised as a sequence of logical components.
-
-Each component performs one responsibility before handing work to the next stage of the pipeline.
-
-```text
-External Event Sources
-        │
-        ▼
-Exchange Connector
-        │
-        ▼
-Event Preparation
-        │
-        ▼
-Streaming Backbone
-        │
-        ▼
-Processing Engine
-        │
-        ▼
-Validation Engine
-        │
-        ▼
-Storage Layer
-        │
-        ▼
-Consumption Layer
-```
-
-These are logical components rather than implementation details.
-
-A logical component may eventually be implemented by one service, several services, or different technologies as the platform evolves. What should remain stable is the responsibility each component owns.
-
----
 
 # Cross-Cutting Concerns
 
-Some engineering concerns don't belong to a single component.
-
-Instead, they exist throughout the platform and influence how every component is designed.
+Some responsibilities exist throughout the platform rather than belonging to one component.
 
 ## Observability
 
-Observability isn't something that's added once the pipeline is finished.
+Every major component should expose enough operational information to explain what it is doing and whether it is healthy.
 
-Every component should expose enough operational information to explain what it's doing and whether it's healthy.
+Operational telemetry is treated as a product of the platform in its own right rather than something added after the system is built.
 
-Exactly what that information looks like will vary. An Exchange Connector might expose connection status and reconnect attempts, while the Processing Engine may report throughput and processing latency.
+This keeps operational health separate from business data while making failures easier to understand.
 
-The important idea is that operational visibility is built into the platform from the beginning rather than treated as an afterthought.
 
----
 
 ## Configuration
 
 Every component depends on configuration, but no component owns it.
 
-Connection details, runtime settings, validation rules, and deployment-specific values should remain external to the implementation so the platform behaves consistently across different environments.
+Connection settings, runtime behaviour, validation rules, and environment-specific values remain external to the implementation.
 
-How configuration is supplied to each component is described in the Deployment Architecture document.
+How configuration is supplied is described in the Deployment Architecture document.
 
----
+
 
 # Exchange Connector
 
-## Purpose
+## Why this component exists
 
-The Exchange Connector forms the boundary between CryptoPulse and external event sources.
+CryptoPulse depends on external event sources, but the rest of the platform shouldn't depend on how those providers expose their data.
 
-Its responsibility is to establish and maintain external connections, receive live market events, and introduce those events into the platform. By keeping all provider-specific communication in one place, the rest of the platform remains independent of how individual exchanges expose their data.
+The Exchange Connector forms that boundary.
 
-Version 1 communicates with a single exchange, but the boundary is intentionally designed so additional exchanges can be introduced later without changing the rest of the system.
+Its only responsibility is bringing external events into the platform reliably.
 
 ### Responsibilities
 
-* Connect to external event sources.
+* Establish connections to external event sources.
 * Receive live market events.
 * Recover from temporary connection failures.
-* Forward events to the preparation stage.
+* Forward received events for preparation.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-The Exchange Connector does **not**:
-
-* validate incoming data
-* transform event structure
-* calculate business metrics
+* understand internal business rules
+* validate events
+* transform event structures
 * store data
 
-Its responsibility ends once an event has successfully entered the platform.
+### Failure behaviour
 
-### Interacts with
+If the connection is interrupted, the connector attempts to reconnect and continue receiving events.
 
-* External Event Sources
-* Event Preparation
-
-### Failure handling
-
-If connectivity is interrupted, the connector attempts to re-establish the connection and resume receiving events without requiring manual intervention.
+Events published while the platform is disconnected are outside the platform's control and are a known limitation of Version 1.
 
 ### Future evolution
 
-Future versions may support multiple exchanges through a common connector interface without changing the rest of the pipeline.
+Version 1 supports a single exchange.
 
----
+Future versions should be able to introduce additional exchanges without changing the rest of the platform.
+
+
 
 # Event Preparation
 
-## Purpose
+## Why this component exists
 
-Different exchanges describe the same trade in different ways.
+Different exchanges describe the same market event differently.
 
-The purpose of Event Preparation is to translate those exchange-specific messages into a single internal event model that every downstream component understands.
+The rest of the platform shouldn't need to understand those differences.
 
-Creating one consistent representation of an event means validation, processing, storage, and analytics never need to understand exchange-specific payloads. Supporting a new exchange should primarily require changes here rather than throughout the platform.
+Event Preparation translates every incoming message into a single internal event model so every downstream component works with the same representation.
 
 ### Responsibilities
 
-* Normalise incoming events.
+* Translate exchange-specific payloads.
 * Standardise field names.
 * Convert timestamps and data types.
 * Produce the platform's internal event model.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-Event Preparation does **not**:
-
-* determine whether an event is valid
-* calculate metrics
+* decide whether an event is trustworthy
+* calculate business metrics
 * persist data
 
-Its job is translation, not validation.
+### Failure behaviour
 
-### Interacts with
+Events that cannot be translated into the internal event model remain visible for investigation rather than disappearing silently.
 
-* Exchange Connector
-* Streaming Backbone
-
-### Failure handling
-
-Events that cannot be translated into the platform's internal event model remain visible for investigation rather than being silently discarded. Since they cannot be represented as valid platform events, they never enter the main processing pipeline.
+Because they cannot be represented as valid platform events, they never progress into the trusted pipeline.
 
 ### Future evolution
 
-As additional exchanges are supported, this component should absorb the exchange-specific translation logic while keeping the rest of the platform unchanged.
+As additional exchanges are introduced, exchange-specific translation logic should remain isolated within this component.
 
----
 
-# Streaming Backbone
 
-## Purpose
+# Bronze Dataset
 
-The Streaming Backbone separates producers from consumers and provides the communication layer of the platform.
+## Why this component exists
 
-This allows individual parts of the system to evolve independently instead of relying on direct point-to-point communication.
+Once the platform has successfully received and understood an event, it should preserve that event before making any decisions about its quality.
+
+Bronze acts as the platform's landing zone.
+
+It records what CryptoPulse successfully received, making replay, auditing, and debugging possible even if later stages reject the event.
 
 ### Responsibilities
 
-* Transport events between components.
-* Decouple producers and consumers.
-* Buffer events while downstream processing catches up.
+* Preserve successfully ingested events.
+* Provide an immutable historical record.
+* Support replay and auditing.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-The Streaming Backbone does **not**:
+* validate records
+* calculate metrics
+* expose business data
 
-* inspect event contents
-* validate data
-* perform business processing
-* store analytical datasets
-
-### Interacts with
-
-* Event Preparation
-* Processing Engine
-
-### Failure handling
-
-Temporary downstream interruptions should not require upstream components to stop accepting new events.
-
-### Future evolution
-
-Future versions may introduce additional event streams or support different categories of events without changing the role of the backbone itself.
-
----
-
-# Processing Engine
-
-## Purpose
-
-The Processing Engine is responsible for turning trustworthy events into information that can be analysed.
-
-Keeping business transformations separate from ingestion and validation makes each stage easier to reason about and change independently.
-
-### Responsibilities
-
-* Transform incoming events.
-* Generate derived values.
-* Perform aggregations.
-* Prepare data for long-term analytical use.
-
-### Outside its responsibility
-
-The Processing Engine does **not**:
-
-* communicate with external providers
-* receive raw exchange messages
-* expose dashboards
-* manage persistence
-
-### Interacts with
-
-* Streaming Backbone
-* Validation Engine
-
-### Failure handling
-
-Processing failures should be isolated to the affected events while allowing the rest of the pipeline to continue operating normally.
-
-### Future evolution
-
-Additional analytical transformations may be introduced without changing the overall responsibility of this component.
-
----
 
 # Validation Engine
 
-## Purpose
+## Why this component exists
 
-The Validation Engine is the platform's quality gate.
+Analytics are only useful if the underlying data can be trusted.
 
-Its role is to ensure that only trustworthy data progresses into the datasets consumed by downstream systems.
-
-Keeping validation separate from processing allows business logic and data quality rules to evolve independently.
+The Validation Engine is responsible for deciding whether an event is suitable for downstream use.
 
 ### Responsibilities
 
-* Validate incoming records.
-* Detect malformed events.
-* Identify duplicate records.
-* Route invalid records for investigation.
+* Apply data quality rules.
+* Detect malformed or duplicate events.
+* Separate trusted events from rejected events.
+* Route rejected events to the Quarantine Dataset.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-The Validation Engine does **not**:
-
-* transform business data
-* calculate analytical metrics
-* store records
+* calculate business metrics
+* modify business datasets
 * communicate with external providers
 
-### Interacts with
+### Failure behaviour
 
-* Processing Engine
-* Storage Layer
+Validation failures do not stop the pipeline.
 
-### Failure handling
-
-Records that fail validation are isolated from the main pipeline while valid records continue downstream without interruption.
+Trusted events continue to Silver while rejected events remain available for investigation in the Quarantine Dataset.
 
 ### Future evolution
 
-Validation rules are expected to grow over time, but the responsibility of this component should remain unchanged.
+Validation rules are expected to evolve over time, but the responsibility of this component should remain unchanged.
 
----
 
-# Storage Layer
 
-## Purpose
+# Quarantine Dataset
 
-The Storage Layer preserves data throughout its lifecycle.
+## Why this component exists
 
-Instead of maintaining only one version of the data, it keeps progressively more refined representations that support replay, auditing, and analytical workloads.
+Rejecting an event should never mean losing it.
+
+The Quarantine Dataset preserves events that could not continue through the trusted pipeline so they can be inspected, understood, and, where appropriate, replayed after the underlying issue has been resolved.
 
 ### Responsibilities
 
-* Persist platform data.
-* Preserve historical records.
-* Store trusted analytical datasets.
+* Preserve rejected events.
+* Support investigation.
+* Provide visibility into data quality issues.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-The Storage Layer does **not**:
+* participate in analytics
+* feed downstream consumers
+* replace Bronze history
 
-* validate incoming events
-* generate business metrics
-* monitor platform health
 
-### Interacts with
 
-* Validation Engine
-* Consumption Layer
+# Silver Dataset
 
-### Failure handling
+## Why this component exists
 
-Storage failures should be surfaced immediately so they can be investigated before they result in silent data loss.
+Silver represents the platform's trusted operational data.
+
+Every event stored here has successfully passed validation and is ready for downstream processing.
+
+### Responsibilities
+
+* Store validated events.
+* Provide trusted input for processing.
+* Act as the foundation for analytical workloads.
+
+### It deliberately does **not**
+
+* preserve rejected events
+* calculate business metrics
+
+
+
+# Processing Engine
+
+## Why this component exists
+
+Once data is trusted, it can be transformed into information that is useful for analysis.
+
+Separating processing from validation keeps business logic independent from data quality rules.
+
+### Responsibilities
+
+* Aggregate trusted events.
+* Calculate derived values.
+* Produce analytical datasets.
+
+### It deliberately does **not**
+
+* validate incoming data
+* receive external events
+* expose dashboards
+
+### Failure behaviour
+
+Failures affect only the events being processed.
+
+The rest of the platform continues operating independently.
 
 ### Future evolution
 
-Additional storage technologies or optimisation strategies may be introduced without changing the responsibility of the Storage Layer.
+New analytical calculations can be introduced without changing the responsibilities of surrounding components.
 
----
 
-# Consumption Layer
 
-## Purpose
+# Gold Dataset
 
-The Consumption Layer is where the platform delivers value.
+## Why this component exists
 
-It makes trustworthy data available to people and downstream systems without exposing the complexity of the pipeline that produced it.
+Gold contains business-ready information rather than individual events.
+
+It exists to provide a stable interface between the platform and the people or systems consuming its outputs.
 
 ### Responsibilities
 
-* Expose business datasets.
-* Support analytical workloads.
-* Provide data for dashboards, reporting, and future downstream services.
+* Store business-ready datasets.
+* Support dashboards and reporting.
+* Provide trusted analytical outputs.
 
-### Outside its responsibility
+### It deliberately does **not**
 
-The Consumption Layer does **not**:
-
+* preserve raw history
+* perform event validation
 * process streaming events
-* validate data
-* modify stored datasets
 
-### Interacts with
 
-* Storage Layer
-* Downstream consumers
 
-### Failure handling
+# Design Decisions
 
-Failures in consuming applications should never interrupt the upstream processing pipeline.
+Several architectural decisions shape the way these components fit together.
 
-### Future evolution
+### Why preserve Bronze before validation?
 
-Future versions may introduce APIs, additional dashboards, machine learning workloads, or other consumers without requiring changes to upstream components.
+Once an event has been successfully received, the platform should preserve what it actually saw before deciding whether that event is trustworthy.
 
----
+This makes replay, auditing, and debugging much easier.
 
-# Relationship to the rest of the architecture
 
-This document explains the responsibility of each logical component.
 
-The remaining architecture documents build on that foundation.
+### Why separate validation from processing?
 
-* **Data Flow** follows a single event as it moves through these components.
-* **Deployment Architecture** explains where these components run and how they communicate.
-* **Data Model** describes the information those components produce and consume.
+Data quality and business logic solve different problems.
 
-Together, these documents describe the platform from progressively lower levels of abstraction without repeating the same information.
+Keeping them independent allows each to evolve without affecting the other.
+
+
+
+### Why keep a Quarantine Dataset?
+
+Rejected events often contain valuable information about upstream issues.
+
+Keeping them visible makes failures explainable instead of mysterious.
+
+
+
+### Why separate operational telemetry from business data?
+
+Business data answers questions about the market.
+
+Operational telemetry answers questions about the platform.
+
+Treating them as separate products keeps monitoring independent of analytical workloads.

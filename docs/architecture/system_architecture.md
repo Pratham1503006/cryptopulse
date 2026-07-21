@@ -2,205 +2,253 @@
 
 ## Why this document exists
 
-CryptoPulse is made up of several independent parts working together to solve a single problem.
+Before looking at individual components or technologies, it's useful to understand the platform as a whole.
 
-Looking at the source code alone makes it difficult to understand where one responsibility ends and another begins.
+This document describes the logical architecture of CryptoPulse. It explains the major responsibilities that make up the platform, the boundaries between them, and how data moves at a high level.
 
-This document provides a high-level view of the platform before diving into individual components or implementation details. It describes how the system is organised, how information moves through it, and the responsibilities assigned to each stage of the platform.
+It deliberately avoids implementation details.
 
-It intentionally avoids implementation details. Those belong in the more detailed architecture documents that build on top of this one.
+Whether a responsibility is implemented using Kafka, Spark, or something completely different is a separate decision. The goal here is to describe the architecture in a way that remains valid even if the implementation changes.
 
----
+ 
 
-## At a glance
+# A quick overview
 
-CryptoPulse is a production-inspired streaming data platform that continuously ingests live market events and transforms them into trustworthy analytical datasets through a sequence of independent processing stages.
+CryptoPulse is organised as a sequence of responsibilities that gradually increase the trustworthiness and usefulness of incoming data.
 
----
+An event enters the platform as an external market message.
 
-# Architectural Overview
+As it moves through the system, it becomes:
 
-At a high level, CryptoPulse follows an event-driven streaming architecture.
+* successfully received,
+* safely preserved,
+* validated,
+* transformed into analytical information,
+* and finally consumed by people or downstream systems.
 
-Live events enter the platform, move through a sequence of well-defined stages, become progressively more trustworthy as they pass through the system, and are finally made available for downstream consumers.
+Alongside this journey, every major component emits operational telemetry so the health of the platform can be observed independently of the business data it produces.
+
+ 
+
+# High-level architecture
 
 ```text
-External Event Sources
+                    External Event Sources
+                              │
+                              ▼
+                    Exchange Connector
+                              │
+                              ▼
+                     Event Preparation
+                              │
+                              ▼
+                     Streaming Backbone
+                              │
+                              ▼
+                     Bronze Dataset
+                  (Raw Landing Zone)
+                              │
+                              ▼
+                    Validation Engine
+                    ┌─────────┴──────────┐
+                    ▼                    ▼
+          Silver Dataset        Quarantine Dataset
+          (Trusted Data)      (Rejected Events)
+                    │
+                    ▼
+               Processing Engine
+                    │
+                    ▼
+                Gold Dataset
+          (Business-Ready Data)
+                    │
+                    ▼
+            Business Consumers
+
+
+────────────────────────────────────────────────────
+
+Every Component
         │
         ▼
- Event Ingestion
+Operational Telemetry
         │
         ▼
- Event Preparation
-        │
-        ▼
- Event Streaming
-        │
-        ▼
- Data Validation
-        │
-        ▼
- Layered Storage
-        │
-        ▼
- Consumption
+Operational Monitoring
 ```
 
-Each stage has a single responsibility.
+The architecture intentionally separates the business data pipeline from operational telemetry.
 
-Rather than combining multiple concerns into one service, the platform separates ingestion, preparation, streaming, validation, storage, and consumption into distinct architectural layers. This makes the system easier to understand, monitor, test, and evolve over time.
+Business datasets describe **what is happening in the market**.
 
----
+Operational telemetry describes **how well the platform itself is operating**.
 
-# Architectural Style
+Although both are valuable, they serve different purposes and evolve independently.
 
-CryptoPulse follows two architectural styles that complement each other.
+ 
 
-### Event-Driven
+# Architectural responsibilities
 
-The platform reacts to events as they arrive instead of processing static datasets on a schedule.
+The platform is organised around six logical responsibilities.
 
-Every market trade is treated as an immutable event that flows through the system exactly once before becoming part of a progressively richer analytical dataset.
+Each responsibility solves one problem before handing work to the next stage.
 
----
+## 1. Event Ingestion
 
-### Layered Processing
+The platform establishes communication with external event sources and receives live market events.
 
-Each architectural layer has one clearly defined responsibility.
+Its responsibility is simply to bring events into CryptoPulse reliably.
 
-Rather than performing multiple unrelated tasks in a single stage, the platform gradually improves the quality and usability of the data as it moves downstream.
+ 
 
-Keeping responsibilities separate makes failures easier to isolate and architectural changes easier to introduce without affecting the rest of the system.
+## 2. Event Standardisation
 
----
+External providers rarely describe data in the same way.
 
-# Architectural Layers
+Before an event can move through the platform, it is converted into a single internal representation that every downstream component understands.
 
-The platform is organised into six logical layers.
+From this point onward, the rest of the platform no longer depends on exchange-specific message formats.
 
-## Event Ingestion
+ 
 
-Receives data from external event sources and converts it into a format understood by the platform.
+## 3. Data Preservation
 
-This layer is the only part of the system that communicates directly with external providers.
+Once an event has entered the platform successfully, it is preserved in the Bronze dataset.
 
----
+Bronze acts as the platform's landing zone.
 
-## Event Preparation
+It represents the earliest version of an event that CryptoPulse has successfully received and allows the platform to replay or audit historical activity without depending on the original data source.
 
-Standardises incoming events before they enter the rest of the platform.
+Preserving data before applying quality rules ensures that the platform always retains an accurate record of what it received.
 
-Typical responsibilities include normalising field names, converting timestamps, standardising data types, and preparing events for downstream validation.
+ 
 
-Separating preparation from validation keeps validation focused on determining whether an event is trustworthy rather than transforming it into the expected format.
+## 4. Data Validation
 
----
+The Validation Engine determines whether an event is suitable for trusted analytical use.
 
-## Event Streaming
+Events that satisfy the platform's quality expectations continue into the Silver dataset.
 
-Moves prepared events between independent parts of the platform.
+Events that fail validation are routed to the Quarantine dataset where they remain available for investigation.
 
-Rather than allowing components to communicate directly, the streaming layer acts as the backbone of the architecture, enabling producers and consumers to evolve independently.
+Removing an event from the trusted pipeline should never mean silently losing it.
 
----
+ 
 
-## Data Validation
+## 5. Data Processing
 
-Acts as the quality gate for the platform.
+Only trusted data is processed into higher-level analytical datasets.
 
-Incoming events are checked against the platform's expected data model before progressing further through the pipeline.
+Business calculations, aggregations, and derived metrics are performed after validation rather than before it.
 
-Records that fail validation remain visible for investigation instead of disappearing silently.
+This separation keeps business logic independent from data quality rules and ensures analytical outputs are always derived from trusted inputs.
 
----
+The result of this stage is the Gold dataset.
 
-## Layered Storage
+ 
 
-Stores data at different stages of its lifecycle.
+## 6. Data Consumption
 
-Rather than maintaining a single representation of the data, the platform preserves both raw events and progressively refined datasets, making historical replay, auditing, and analytical workloads possible.
+The Gold dataset is consumed by dashboards, reports, analytical tools, or future downstream services.
 
----
+Consumers should not need to understand how the platform produced the data.
 
-## Consumption
+They interact only with datasets that have already passed through the previous architectural stages.
 
-Makes trustworthy data available to downstream consumers.
+ 
 
-Consumers may include analytical dashboards, operational monitoring tools, reporting systems, or future services built on top of the platform.
+# Operational telemetry
 
-The architecture deliberately separates data production from data consumption so new consumers can be introduced without changing the upstream pipeline.
+Operational visibility is treated as a parallel concern rather than the final stage of the business pipeline.
 
----
+Every major component emits telemetry describing its own behaviour.
 
-# External Systems
+Examples include:
 
-CryptoPulse intentionally keeps external systems at the edge of the architecture.
+* connection health,
+* throughput,
+* processing latency,
+* validation failures,
+* consumer lag,
+* storage health.
 
-External event sources interact with the platform only through clearly defined ingestion interfaces. Once data enters the platform, communication between architectural layers happens through the platform's internal contracts rather than direct dependencies on external services.
+These signals are collected independently from business data and are used to understand the health of the platform rather than market activity.
 
-Current categories of external systems include:
+Keeping operational telemetry separate prevents monitoring concerns from becoming tightly coupled to analytical datasets.
 
-* External event sources
-* Business intelligence tools
-* Monitoring and visualisation platforms
-* Local infrastructure services
+ 
 
-This separation reduces coupling between the platform and external providers while making the internal architecture easier to evolve over time.
+# Architectural characteristics
 
----
+Several principles influenced the way the platform is organised.
 
-# System Boundaries
+## Event-driven
 
-CryptoPulse is responsible for the streaming data platform itself.
+The platform reacts to incoming events rather than scheduled batches.
 
-The system begins when external events are received and ends when trustworthy datasets and operational information become available for downstream consumers.
+Each event progresses independently through the pipeline.
 
-Capabilities such as trading, authentication, portfolio management, user accounts, and cloud infrastructure are intentionally outside these boundaries and are documented separately in the project scope.
+ 
 
-Maintaining a clear system boundary keeps Version 1 focused on solving one engineering problem well.
+## Layered
 
----
+Data becomes progressively more trustworthy as it moves from Bronze to Silver to Gold.
 
-# Architectural Characteristics
+Each dataset exists for a different purpose rather than representing different copies of the same information.
 
-The architecture is designed around a small number of characteristics that should remain stable even if individual technologies change.
+ 
 
-The platform is designed to be:
+## Observable
 
-* **Event-driven**, reacting to incoming events rather than scheduled batches.
-* **Layered**, with each architectural stage owning one responsibility.
-* **Observable**, making operational behaviour visible alongside business outputs.
-* **Modular**, allowing individual components to evolve independently.
-* **Reproducible**, enabling another developer to build and run the complete platform using only the documented setup process.
+Every major responsibility contributes operational telemetry.
 
-These characteristics describe the architecture itself rather than the technologies used to implement it.
+Understanding whether the platform is healthy should not require reading application logs.
 
----
+ 
 
-# Relationship to the Architecture Documentation
+## Modular
 
-This document intentionally stays at the highest level of abstraction.
+Each responsibility owns one part of the problem.
 
-The remaining architecture documents progressively introduce more detail.
+Changing one part of the platform should require minimal changes elsewhere.
 
-| Document                    | Responsibility                                           |
-| --------------------------- | -------------------------------------------------------- |
-| **System Architecture**     | Defines the overall structure of the platform            |
-| **Component Architecture**  | Explains the responsibility of each individual component |
-| **Data Flow**               | Follows a single event through the platform              |
-| **Deployment Architecture** | Describes how services are deployed and communicate      |
-| **Data Model**              | Defines the information managed throughout the platform  |
+ 
 
-Together, these documents describe the architecture from progressively lower levels of abstraction without repeating the same information.
+## Reproducible
 
----
+The platform is intended to be built and run by another developer using only the repository and its documentation.
 
-# Evolution
+If that cannot be done, the platform is incomplete regardless of whether the software itself works.
 
-This document represents the current understanding of CryptoPulse's architecture.
+ 
 
-Implementation details, technologies, and deployment strategies may change as the project evolves.
+# System boundaries
 
-The overall responsibilities of the architectural layers, however, should remain relatively stable.
+CryptoPulse intentionally focuses on the data platform.
 
-If those responsibilities change, this document should be updated first before the more detailed architecture documents are revised.
+Several concerns sit outside those boundaries.
+
+The platform does not manage:
+
+* user authentication,
+* portfolio management,
+* order execution,
+* trading strategies,
+* wallet integration,
+* account management.
+
+Similarly, the platform can only process events that it successfully receives.
+
+Events published while an external source is unavailable or while the platform is disconnected are outside the platform's control and are not recoverable in Version 1. This is a known limitation of the system boundary rather than a failure of the internal pipeline.
+
+ 
+
+# A note on evolution
+
+The architecture described here represents Version 1 of CryptoPulse.
+
+As the project evolves, technologies, deployment strategies, and individual implementations may change.
+
+The responsibilities described in this document should remain considerably more stable.
+
+If a future architectural decision requires changing these responsibilities or their boundaries, this document should be updated before any lower-level architecture documents are revised.

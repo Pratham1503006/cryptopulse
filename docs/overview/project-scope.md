@@ -18,7 +18,7 @@ If a capability is described here, it belongs in the current release.
 
 If it isn't, it belongs in a future version until this release is complete.
 
----
+ 
 
 ## Scope of Version 1
 
@@ -26,7 +26,7 @@ Version 1 focuses on building a complete, end-to-end streaming data platform cap
 
 The implementation is intentionally limited to the capabilities described below.
 
----
+ 
 
 ## Included in Version 1
 
@@ -37,7 +37,7 @@ The implementation is intentionally limited to the capabilities described below.
 * Automatically recover from temporary connection failures.
 * Normalise incoming events into a common internal format.
 
----
+ 
 
 ### Streaming pipeline
 
@@ -45,7 +45,7 @@ The implementation is intentionally limited to the capabilities described below.
 * Consume events for downstream processing.
 * Decouple data producers from data consumers.
 
----
+ 
 
 ### Data processing
 
@@ -54,7 +54,7 @@ The implementation is intentionally limited to the capabilities described below.
 * Handle duplicate events.
 * Generate derived datasets from validated data.
 
----
+ 
 
 ### Data storage
 
@@ -62,7 +62,7 @@ The implementation is intentionally limited to the capabilities described below.
 * Maintain validated datasets.
 * Produce analytical datasets for reporting and querying.
 
----
+ 
 
 ### Analytics
 
@@ -70,19 +70,19 @@ Generate a core set of business metrics from processed data.
 
 The specific metrics are documented separately as part of the analytical model.
 
----
+ 
 
 ### Operational monitoring
 
 Expose operational information required to understand the health of the platform, including processing status, pipeline activity, and validation behaviour.
 
----
+ 
 
 ### Local deployment
 
 Provide a reproducible local deployment that allows another developer to run the complete platform using the documented setup process.
 
----
+ 
 
 ### Documentation
 
@@ -90,7 +90,7 @@ Document the architecture, implementation decisions, deployment process, and dat
 
 Documentation is considered part of the Version 1 deliverable.
 
----
+ 
 
 ## Explicitly out of scope
 
@@ -101,7 +101,7 @@ The following capabilities are intentionally excluded from Version 1.
 * Multiple exchange connectors
 * Historical backfilling from multiple providers
 
----
+ 
 
 ### Machine learning
 
@@ -110,7 +110,7 @@ The following capabilities are intentionally excluded from Version 1.
 * Recommendation systems
 * Statistical anomaly detection
 
----
+ 
 
 ### Trading
 
@@ -119,7 +119,7 @@ The following capabilities are intentionally excluded from Version 1.
 * Wallet integration
 * Exchange account management
 
----
+ 
 
 ### Infrastructure
 
@@ -128,7 +128,7 @@ The following capabilities are intentionally excluded from Version 1.
 * Multi-region deployments
 * High-availability clusters
 
----
+ 
 
 ### Application features
 
@@ -138,7 +138,7 @@ The following capabilities are intentionally excluded from Version 1.
 * Billing
 * Multi-tenancy
 
----
+ 
 
 ## Acceptance criteria
 
@@ -154,7 +154,7 @@ Specifically:
 
 Detailed engineering and operational targets are defined in `success-metrics.md`.
 
----
+ 
 
 ## Scope changes
 
