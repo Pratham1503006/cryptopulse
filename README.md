@@ -46,7 +46,7 @@ The pipeline itself is the interesting part.
 * 📡 Consume live cryptocurrency market events using public WebSocket APIs
 * ⚡ Stream events through Apache Kafka
 * 🔄 Process data using Spark Structured Streaming
-* ✅ Validate events and isolate invalid records using a Dead Letter Queue
+* ✅ Validate events and isolate invalid records in a Quarantine Layer
 * 🥉🥈🥇 Organize data using a Bronze → Silver → Gold (Medallion) architecture
 * 🗄️ Store curated datasets in PostgreSQL
 * 📊 Build business dashboards using Power BI
@@ -64,26 +64,30 @@ The complete architecture, component interactions, and data flow are documented 
 Exchange Connector
         │
         ▼
-Python Producer
+Event Preparation
         │
         ▼
-Apache Kafka
+Bronze Layer
         │
         ▼
-Spark Structured Streaming
+Validation Engine
+      ├────────────► Quarantine Layer
+      │
+      ▼
+Silver Layer
         │
         ▼
-Validation
+Processing Engine
         │
         ▼
-Bronze → Silver → Gold
-        │
-        ▼
-PostgreSQL
-   ┌──────────┴──────────┐
-   ▼                     ▼
-Power BI             Grafana
+Gold Layer
 ```
+
+---
+
+## Repository Structure
+
+The organisation of the repository is documented in **`docs/repository-structure.md`**.
 
 ---
 
@@ -104,30 +108,7 @@ Power BI             Grafana
 
 
 
-## Repository Structure
 
-```text
-cryptopulse/
-│
-├── producer/              # Exchange connectors & Kafka producer
-├── spark/                 # Stream processing jobs
-├── warehouse/             # Database schema & persistence
-├── analytics/             # SQL models & business metrics
-├── monitoring/            # Prometheus & Grafana
-├── docker/                # Docker configuration
-├── tests/                 # Unit, integration & end-to-end tests
-│
-├── docs/
-│   ├── overview/
-│   ├── architecture/
-│   ├── engineering/
-│   ├── data/
-│   └── adr/
-│
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
 
 
 
@@ -169,7 +150,7 @@ docker compose up -d
 ```bash
 make run-producer
 
-make run-spark
+make run-processing
 ```
 
 Once everything is running:
@@ -191,10 +172,9 @@ The documentation is organised by responsibility.
 | Directory            | Description                                                              |
 | -------------------- | ------------------------------------------------------------------------ |
 | `docs/overview/`     | Project overview, design goals, scope, and roadmap                       |
-| `docs/architecture/` | System architecture, deployment, components, and data flow               |
-| `docs/engineering/`  | Development workflow, testing, monitoring, deployment, and operations    |
-| `docs/data/`         | Schemas, validation rules, Medallion architecture, and analytical models |
-| `docs/adr/`          | Architecture Decision Records documenting important design choices       |
+| `docs/architecture/` | System architecture, components, data flow, and data model               |
+
+Implementation-oriented documentation (repository structure, configuration, testing, monitoring, development, deployment) will be written alongside the code.
 
 If you're exploring the repository for the first time, I'd recommend starting with **`docs/overview/`** before diving into the implementation.
 
