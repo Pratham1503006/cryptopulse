@@ -115,7 +115,7 @@ Event Preparation translates every incoming message into a single internal event
 
 ### Failure behaviour
 
-Events that cannot be translated into the internal event model remain visible for investigation rather than disappearing silently.
+Events that cannot be translated into the internal event model remain visible for review rather than disappearing silently.
 
 Because they cannot be represented as valid platform events, they never progress into the trusted pipeline.
 
@@ -166,14 +166,14 @@ The Validation Engine is responsible for deciding whether an event is suitable f
 ### It deliberately does **not**
 
 * calculate business metrics
-* modify business datasets
+* modify business information
 * communicate with external providers
 
 ### Failure behaviour
 
 Validation failures do not stop the pipeline.
 
-Trusted events continue to Silver while rejected events remain available for investigation in the Quarantine Layer.
+Trusted events continue to the Silver Layer while rejected events are preserved in the Quarantine Layer.
 
 ### Future evolution
 
@@ -192,7 +192,7 @@ The Quarantine Layer preserves events that could not continue through the truste
 ### Responsibilities
 
 * Preserve rejected events.
-* Support investigation.
+* Preserve rejected events for review and possible replay.
 * Provide visibility into data quality issues.
 
 ### It deliberately does **not**
@@ -207,7 +207,7 @@ The Quarantine Layer preserves events that could not continue through the truste
 
 ## Why this component exists
 
-Silver represents the platform's trusted operational data.
+Silver represents the platform's trusted events.
 
 Every event stored here has successfully passed validation and is ready for downstream processing.
 
@@ -236,7 +236,7 @@ Separating processing from validation keeps business logic independent from data
 
 * Aggregate trusted events.
 * Calculate derived values.
-* Produce analytical datasets.
+* Produce business information in the Gold Layer.
 
 ### It deliberately does **not**
 
@@ -266,7 +266,7 @@ It exists to provide a stable interface between the platform and the people or s
 
 ### Responsibilities
 
-* Store business-ready datasets.
+* Provide business-ready information in the Gold Layer.
 * Support dashboards and reporting.
 * Provide trusted analytical outputs.
 

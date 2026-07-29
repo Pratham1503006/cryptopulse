@@ -33,22 +33,15 @@ Alongside this journey, every major component emits operational telemetry so the
 # High-level architecture
 
 ```text
-                    External Event Sources
-                              │
-                              ▼
-                    Exchange Connector
-                              │
-                              ▼
-                     Event Preparation
-                              │
-                              ▼
-                     Streaming Backbone
-                              │
-                              ▼
+                     Exchange Connector
+                               │
+                               ▼
+                      Event Preparation
+                               │
+                               ▼
                       Bronze Layer
-                  (Raw Landing Zone)
-                              │
-                              ▼
+                               │
+                               ▼
                     Validation Engine
                     ┌─────────┴──────────┐
                     ▼                    ▼
@@ -79,7 +72,7 @@ Operational Monitoring
 
 The architecture intentionally separates the business data pipeline from operational telemetry.
 
-Business datasets describe **what is happening in the market**.
+Business information describes **what is happening in the market**.
 
 Operational telemetry describes **how well the platform itself is operating**.
 
@@ -129,7 +122,7 @@ The Validation Engine determines whether an event is suitable for trusted analyt
 
 Events that satisfy the platform's quality expectations continue into the Silver Layer.
 
-Events that fail validation are routed to the Quarantine Layer where they remain available for investigation.
+Events that fail validation are routed to the Quarantine Layer where they are preserved as rejected events.
 
 Removing an event from the trusted pipeline should never mean silently losing it.
 
@@ -137,7 +130,7 @@ Removing an event from the trusted pipeline should never mean silently losing it
 
 ## 5. Data Processing
 
-Only trusted data is processed into higher-level analytical datasets.
+Only trusted events are processed into higher-level business information.
 
 Business calculations, aggregations, and derived metrics are performed after validation rather than before it.
 
@@ -153,7 +146,7 @@ The Gold Layer is consumed by dashboards, reports, analytical tools, or future d
 
 Consumers should not need to understand how the platform produced the data.
 
-They interact only with datasets that have already passed through the previous architectural stages.
+They interact only with information produced from the previous architectural stages.
 
  
 
@@ -174,7 +167,7 @@ Examples include:
 
 These signals are collected independently from business data and are used to understand the health of the platform rather than market activity.
 
-Keeping operational telemetry separate prevents monitoring concerns from becoming tightly coupled to analytical datasets.
+Keeping operational telemetry separate prevents monitoring concerns from becoming tightly coupled to business information.
 
  
 
@@ -192,9 +185,9 @@ Each event progresses independently through the pipeline.
 
 ## Layered
 
-Data becomes progressively more trustworthy as it moves from Bronze to Silver to Gold.
+Information becomes progressively more useful as it moves from the Bronze Layer to the Silver Layer to the Gold Layer.
 
-Each dataset exists for a different purpose rather than representing different copies of the same information.
+Each layer exists for a different purpose rather than representing different copies of the same information.
 
  
 

@@ -40,7 +40,7 @@ Business Information
 (Aggregated Insights)
 ```
 
-The datasets used throughout the platform simply preserve these different stages of that lifecycle.
+The layers used throughout the platform preserve these different stages of that lifecycle.
 
 * **Bronze** preserves successfully received internal events.
 * **Silver** preserves trusted events.
@@ -87,7 +87,7 @@ The event is written to the  Bronze Layer.
 
 This is a deliberate architectural decision.
 
-Bronze is not a trusted analytical dataset.
+Bronze is not trusted analytical information.
 
 It is the platform's historical record of successfully received events.
 
@@ -111,7 +111,7 @@ From here, the journey splits.
 
 If validation succeeds, the event is written to the Silver Layer.
 
-Silver represents trusted operational data.
+Silver represents trusted events.
 
 Every event stored here has passed the platform's quality checks and is suitable for downstream processing.
 
@@ -139,7 +139,7 @@ Quarantine exists to preserve visibility into failures.
 
 Rejected events should never disappear silently.
 
-Keeping them separate from trusted data protects downstream consumers while allowing engineers to investigate why an event was rejected and whether the underlying issue should be corrected.
+Keeping them separate from trusted data protects downstream consumers while preserving the context needed to review the rejection and correct the underlying issue.
 
 The Quarantine Layer is part of the platform's operational history, not part of its analytical data.
 
@@ -180,7 +180,7 @@ Unlike business data, these signals do not pass through Bronze, Silver, or Gold.
 
 Instead, they form a separate operational view of the platform that supports monitoring, troubleshooting, and capacity planning.
 
-Keeping operational telemetry independent prevents monitoring concerns from becoming tightly coupled to business datasets.
+Keeping operational telemetry independent prevents monitoring concerns from becoming tightly coupled to business information.
 
  
 
@@ -205,7 +205,7 @@ Several principles remain true regardless of where an event is in its lifecycle.
 
 * Every successfully received event is preserved before quality decisions are made.
 * Trusted and rejected events never share the same path.
-* Rejected events remain visible for investigation.
+* Rejected events remain preserved in the Quarantine Layer.
 * Every transformation has a clear purpose.
 * Business information is always derived from trusted data.
 * Operational telemetry remains separate from business data.

@@ -89,7 +89,7 @@ Business Information is no longer concerned with individual events.
 
 Instead, it represents analytical outputs derived from many Trusted Events.
 
-Examples include aggregated trading statistics, rolling metrics, market indicators, and other business-facing datasets.
+Examples include aggregated trading statistics, rolling metrics, market indicators, and other business-facing information.
 
 This information forms the Gold Layer consumed by dashboards and analytical tools.
 
