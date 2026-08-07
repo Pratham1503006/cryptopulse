@@ -37,6 +37,7 @@ Narrative project documentation lives under `docs/`, organised by topic. Source 
 ```text
 cryptopulse/
 │
+├── common/                 # Shared models, contracts, configuration, and utilities
 ├── producer/               # Exchange connectors & event preparation
 ├── processing/             # Validation & stream processing
 ├── warehouse/              # Database schema & storage
@@ -56,6 +57,23 @@ cryptopulse/
 ```
 
 ## Directory responsibilities
+
+### common/
+
+Contains platform-wide models, contracts, configuration types, shared exceptions, and utilities used by every application module.
+
+Common must never depend on any application module. Every application module may depend on common.
+
+Suggested layout:
+
+```
+common/
+    config/
+    contracts/
+    models/
+    exceptions/
+    utils/
+```
 
 ### producer/
 
@@ -104,16 +122,18 @@ Includes unit tests, integration tests, and end-to-end tests that validate the p
 Dependencies flow in one direction.
 
 ```text
-producer
-    │
-    ▼
-processing
-    │
-    ▼
-warehouse
-    │
-    ▼
-analytics
+         common
+             ▲
+             │
+         ┌───┴───┐
+         │       │
+    producer  processing
+                 │
+                 ▼
+            warehouse
+                 │
+                 ▼
+            analytics
 
 monitoring/   (no dependencies in either direction)
 tests/        mirrors source tree, no production dependencies
@@ -121,10 +141,11 @@ tests/        mirrors source tree, no production dependencies
 
 No directory should depend on directories to its right in this flow.
 
-- **producer/** depends on nothing inside the repository.
-- **processing/** depends on the event model defined in **producer/** and writes to **warehouse/**.
-- **warehouse/** is a dependency of **processing/** and **analytics/**, not the reverse.
-- **analytics/** depends only on **warehouse/**.
+- **common/** depends on nothing. Every application module may depend on it.
+- **producer/** depends only on **common/**.
+- **processing/** depends on **common/** and writes to **warehouse/**.
+- **warehouse/** depends on **common/** and is consumed by **processing/** and **analytics/**.
+- **analytics/** depends on **common/** and **warehouse/**.
 - **monitoring/** depends on nothing and nothing depends on it.
 
 ## Architectural boundaries
@@ -133,6 +154,7 @@ The directory structure preserves the same boundaries described in the architect
 
 | Directory    | Architectural Responsibility          | Produces                        | Consumes From           |
 | ------------ | ------------------------------------- | ------------------------------- | ----------------------- |
+| common/      | Shared platform foundation            | Models, contracts, config       | Nothing                 |
 | producer/    | Exchange Connector + Event Preparation| Internal Events                 | External event sources  |
 | processing/  | Validation Engine + Processing Engine | Trusted Events, Business Info   | Bronze Layer, Silver Layer |
 | warehouse/   | All four layers (storage)             | —                               | processing/             |
