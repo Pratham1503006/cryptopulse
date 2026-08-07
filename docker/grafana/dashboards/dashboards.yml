@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "cryptopulse"
+    orgId: 1
+    folder: "CryptoPulse"
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /etc/grafana/provisioning/dashboards
