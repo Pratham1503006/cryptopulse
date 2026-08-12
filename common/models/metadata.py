@@ -29,9 +29,7 @@ class EventMetadata(BaseModel):
     event_id: str = Field(description="Unique identifier for the event")
     source: EventSource = Field(description="Origin of the event")
     stage: EventStage = Field(description="Current processing stage")
-    received_at: datetime = Field(
-        description="Timestamp when the platform received the event"
-    )
+    received_at: datetime = Field(description="Timestamp when the platform received the event")
     validated_at: datetime | None = Field(
         default=None,
         description="Timestamp when validation was performed",
