@@ -38,6 +38,7 @@ Narrative project documentation lives under `docs/`, organised by topic. Source 
 cryptopulse/
 │
 ├── common/                 # Shared models, contracts, configuration, and utilities
+├── messaging/              # Event-streaming backbone (Kafka transport & serialization)
 ├── producer/               # Exchange connectors & event preparation
 ├── processing/             # Validation & stream processing
 ├── warehouse/              # Database schema & storage
@@ -83,6 +84,16 @@ Establishes connections to external event sources, receives market events, and t
 
 Produces internal events that are written to the Bronze Layer.
 
+### messaging/
+
+Implements the **event-streaming backbone** between Producer and Processing.
+
+Owns the wire-format codec for the platform's canonical InternalEvent model and the publisher/consumer interfaces used to move events across the transport. Kafka is treated purely as a transport/buffering layer: it contains no validation, no business transformations, and no awareness of Bronze, Silver, or Gold.
+
+Kafka-specific configuration and implementation details live here rather than in common/, keeping common/ technology-independent.
+
+Depends only on common/.
+
 ### processing/
 Implements the **Validation Engine** and **Processing Engine** responsibilities.
 
@@ -125,15 +136,17 @@ Dependencies flow in one direction.
          common
              ▲
              │
-         ┌───┴───┐
-         │       │
-    producer  processing
-                 │
-                 ▼
-            warehouse
-                 │
-                 ▼
-            analytics
+       messaging
+             ▲
+      ┌───────┴───────┐
+      │               │
+  producer        processing
+                      │
+                      ▼
+                 warehouse
+                      │
+                      ▼
+                 analytics
 
 monitoring/   (no dependencies in either direction)
 tests/        mirrors source tree, no production dependencies
@@ -142,8 +155,9 @@ tests/        mirrors source tree, no production dependencies
 No directory should depend on directories to its right in this flow.
 
 - **common/** depends on nothing. Every application module may depend on it.
-- **producer/** depends only on **common/**.
-- **processing/** depends on **common/** and writes to **warehouse/**.
+- **messaging/** depends only on **common/**.
+- **producer/** depends only on **common/** and **messaging/**.
+- **processing/** depends on **common/**, **messaging/**, and writes to **warehouse/**.
 - **warehouse/** depends on **common/** and is consumed by **processing/** and **analytics/**.
 - **analytics/** depends on **common/** and **warehouse/**.
 - **monitoring/** depends on nothing and nothing depends on it.
@@ -155,6 +169,7 @@ The directory structure preserves the same boundaries described in the architect
 | Directory    | Architectural Responsibility          | Produces                        | Consumes From           |
 | ------------ | ------------------------------------- | ------------------------------- | ----------------------- |
 | common/      | Shared platform foundation            | Models, contracts, config       | Nothing                 |
+| messaging/   | Event-streaming backbone (transport)  | Internal Events on the bus      | common/                 |
 | producer/    | Exchange Connector + Event Preparation| Internal Events                 | External event sources  |
 | processing/  | Validation Engine + Processing Engine | Trusted Events, Business Info   | Bronze Layer, Silver Layer |
 | warehouse/   | All four layers (storage)             | —                               | processing/             |
@@ -166,6 +181,7 @@ The directory structure preserves the same boundaries described in the architect
 | New feature                              | Where it goes |
 | ---------------------------------------- | ------------- |
 | A new exchange connector                 | **producer/** |
+| A new event topic or transport change    | **messaging/** |
 | A new validation rule                    | **processing/** |
 | A new business metric or aggregation     | **processing/** or **analytics/** |
 | A new analytical dashboard or report     | **analytics/** |

@@ -9,7 +9,6 @@ warehouse, analytics, monitoring).
 
 from common.config import AppSettings as AppSettings
 from common.config import GrafanaSettings as GrafanaSettings
-from common.config import KafkaSettings as KafkaSettings
 from common.config import PostgresSettings as PostgresSettings
 from common.config import PrometheusSettings as PrometheusSettings
 from common.config import load_settings as load_settings
@@ -35,7 +34,6 @@ __all__ = [
     # Configuration
     "AppSettings",
     "GrafanaSettings",
-    "KafkaSettings",
     "PostgresSettings",
     "PrometheusSettings",
     "load_settings",

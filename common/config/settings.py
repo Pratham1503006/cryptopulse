@@ -4,16 +4,6 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class KafkaSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="kafka_")
-
-    bootstrap_servers: str = Field(default="localhost:9092")
-    topic_prefix: str = Field(default="cryptopulse")
-    consumer_group: str = Field(default="cryptopulse-processing")
-    session_timeout_ms: int = Field(default=45000)
-    enable_auto_commit: bool = Field(default=False)
-
-
 class PostgresSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="postgres_")
 
@@ -54,7 +44,6 @@ class AppSettings(BaseSettings):
     log_level: str = Field(default="INFO")
     log_format: str = Field(default="json")
 
-    kafka: KafkaSettings = Field(default_factory=KafkaSettings)
     postgres: PostgresSettings = Field(default_factory=PostgresSettings)
     prometheus: PrometheusSettings = Field(default_factory=PrometheusSettings)
     grafana: GrafanaSettings = Field(default_factory=GrafanaSettings)
