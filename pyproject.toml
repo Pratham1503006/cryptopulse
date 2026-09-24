@@ -9,6 +9,7 @@ description = "Real-time cryptocurrency market intelligence platform"
 requires-python = ">=3.11"
 dependencies = [
     "aiokafka>=0.12",
+    "asyncpg>=0.29",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
     "structlog>=24.0",

@@ -57,6 +57,31 @@ services:
       retries: 5
       start_period: 10s
 
+  # One-shot job that applies the canonical warehouse migrations after the
+  # database is healthy. Exits 0 when the schema is up to date.
+  postgres-migrations:
+    image: python:3.11-slim
+    container_name: cryptopulse-postgres-migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cryptopulse
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DATABASE=cryptopulse
+      - POSTGRES_USERNAME=cryptopulse
+      - POSTGRES_PASSWORD=cryptopulse
+    volumes:
+      - ./warehouse:/app/warehouse:ro
+      - ./common:/app/common:ro
+    working_dir: /app
+    command: >
+      sh -c "pip install --quiet asyncpg pydantic pydantic-settings structlog &&
+             python -m warehouse.migrations"
+    restart: "no"
+
   prometheus:
     image: prom/prometheus:v2.53.0
     container_name: cryptopulse-prometheus
