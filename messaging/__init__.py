@@ -17,6 +17,7 @@ Both producer/ and processing/ depend on this module.
 from messaging.codec import InternalEventCodec as InternalEventCodec
 from messaging.codec import SerializationError as SerializationError
 from messaging.config import KafkaSettings as KafkaSettings
+from messaging.consumer import ConsumedEvent as ConsumedEvent
 from messaging.consumer import ConsumeError as ConsumeError
 from messaging.consumer import Consumer as Consumer
 from messaging.consumer import KafkaConsumer as KafkaConsumer
@@ -38,6 +39,7 @@ __all__ = [
     # Consumer
     "Consumer",
     "KafkaConsumer",
+    "ConsumedEvent",
     "ConsumeError",
     # Exceptions
     "MessagingError",

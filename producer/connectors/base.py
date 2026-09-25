@@ -69,8 +69,12 @@ class ExchangeConnector(ABC):
         ...
 
     @abstractmethod
-    async def stream(self) -> AsyncIterator[dict[str, Any]]:
+    def stream(self) -> AsyncIterator[dict[str, Any]]:
         """Stream raw exchange events from the external source.
+
+        Declared as a (non-async) method returning an async iterator so
+        implementations are async generator functions; callers iterate
+        with ``async for event in connector.stream()``.
 
         Yields raw exchange payloads exactly as received. No translation,
         validation, or preparation is performed here; translating raw
