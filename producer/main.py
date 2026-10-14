@@ -1,9 +1,12 @@
 """Producer module entry point.
 
-Runs the ingestion vertical slice against the deterministic development
-source:
+Runs the ingestion vertical slice against the exchange selected by
+configuration (``EXCHANGE_NAME``):
 
-    DevExchangeConnector -> DevEventPreparer -> KafkaPublisher (Kafka)
+    ExchangeConnector -> EventPreparer -> KafkaPublisher (Kafka)
+
+``coinbase`` uses the live Coinbase feed; ``dev`` uses the deterministic
+local source. The pipeline itself is identical for both.
 
 Usage:
     python -m producer.main
@@ -21,9 +24,8 @@ from typing import TYPE_CHECKING
 from common.utils import configure_logging, get_logger
 from messaging import KafkaPublisher, KafkaSettings
 from producer.config import ProducerSettings
-from producer.connectors.dev import DevExchangeConnector
+from producer.factory import build_connector, build_preparer
 from producer.pipeline import IngestionPipeline
-from producer.preparation.dev import DevEventPreparer
 
 if TYPE_CHECKING:
     from asyncio import Event
@@ -45,13 +47,15 @@ def _install_stop_signal(stop: Event) -> None:
 
 
 async def run_producer(stop: Event | None = None) -> int:
-    """Run one bounded ingestion session using the development source.
+    """Run one ingestion session against the configured exchange.
 
-    The development connector is finite by design, so a producer run has a
-    natural end: every scripted raw event is prepared and published, then
-    the pipeline stops cleanly. ``stop`` allows an external caller to end
-    the session early (not yet consumed by the finite dev source, but part
-    of the lifecycle contract for real connectors).
+    The connector and preparer are selected from configuration
+    (``EXCHANGE_NAME``). The deterministic ``dev`` source is finite, so a dev
+    run ends after its scripted events; the live ``coinbase`` source runs
+    until ``stop`` is requested (or the run fails).
+
+    ``stop`` is the lifecycle contract for ending a live session: the
+    composition root sets it on SIGINT/SIGTERM.
 
     Returns:
         The number of InternalEvents published to Kafka.
@@ -60,8 +64,8 @@ async def run_producer(stop: Event | None = None) -> int:
     settings = ProducerSettings()
     stop = stop if stop is not None else asyncio.Event()
 
-    connector = DevExchangeConnector()
-    preparer = DevEventPreparer()
+    connector = build_connector(settings)
+    preparer = build_preparer(settings)
     publisher = KafkaPublisher(KafkaSettings())
 
     await publisher.start()

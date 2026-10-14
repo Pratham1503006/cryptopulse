@@ -7,10 +7,12 @@ implementation used by the ingestion vertical slice.
 
 from producer.preparation.base import EventPreparer as EventPreparer
 from producer.preparation.base import PreparationError as PreparationError
+from producer.preparation.coinbase import CoinbaseEventPreparer as CoinbaseEventPreparer
 from producer.preparation.dev import DevEventPreparer as DevEventPreparer
 
 __all__ = [
     "EventPreparer",
     "PreparationError",
+    "CoinbaseEventPreparer",
     "DevEventPreparer",
 ]
