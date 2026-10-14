@@ -17,6 +17,18 @@ from warehouse.schemas.bronze import (
 from warehouse.schemas.bronze import (
     record_to_internal_event as record_to_internal_event,
 )
+from warehouse.schemas.gold import (
+    GOLD_COLUMNS as GOLD_COLUMNS,
+)
+from warehouse.schemas.gold import GOLD_SCHEMA as GOLD_SCHEMA
+from warehouse.schemas.gold import GOLD_TABLE as GOLD_TABLE
+from warehouse.schemas.gold import GoldRowError as GoldRowError
+from warehouse.schemas.gold import (
+    market_window_to_record as market_window_to_record,
+)
+from warehouse.schemas.gold import (
+    record_to_market_window as record_to_market_window,
+)
 from warehouse.schemas.quarantine import (
     QUARANTINE_COLUMNS as QUARANTINE_COLUMNS,
 )
@@ -48,6 +60,11 @@ __all__ = [
     "BRONZE_SCHEMA",
     "BRONZE_TABLE",
     "BronzeRowError",
+    "GOLD_COLUMNS",
+    "GOLD_SCHEMA",
+    "GOLD_TABLE",
+    "GoldRowError",
+    "market_window_to_record",
     "QUARANTINE_COLUMNS",
     "QUARANTINE_SCHEMA",
     "QUARANTINE_TABLE",
@@ -56,6 +73,7 @@ __all__ = [
     "internal_event_to_record",
     "quarantine_record_to_record",
     "record_to_internal_event",
+    "record_to_market_window",
     "record_to_quarantine_record",
     "record_to_trusted_event",
     "SILVER_COLUMNS",

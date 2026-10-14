@@ -19,12 +19,15 @@ from warehouse.exceptions import (
 )
 from warehouse.migrations import MigrationRunner as MigrationRunner
 from warehouse.repositories import BronzeRepository as BronzeRepository
+from warehouse.repositories import GoldRepository as GoldRepository
 from warehouse.repositories import PostgresBronzeRepository as PostgresBronzeRepository
+from warehouse.repositories import PostgresGoldRepository as PostgresGoldRepository
 from warehouse.repositories import PostgresQuarantineRepository as PostgresQuarantineRepository
 from warehouse.repositories import PostgresSilverRepository as PostgresSilverRepository
 from warehouse.repositories import QuarantineRepository as QuarantineRepository
 from warehouse.repositories import SilverRepository as SilverRepository
 from warehouse.schemas.bronze import BronzeRowError as BronzeRowError
+from warehouse.schemas.gold import GoldRowError as GoldRowError
 from warehouse.schemas.quarantine import QuarantineRecord as QuarantineRecord
 from warehouse.schemas.quarantine import QuarantineRowError as QuarantineRowError
 from warehouse.schemas.silver import SilverRowError as SilverRowError
@@ -33,10 +36,13 @@ __all__ = [
     "BronzeRepository",
     "BronzeRowError",
     "DatabasePool",
+    "GoldRepository",
+    "GoldRowError",
     "MigrationError",
     "MigrationRunner",
     "PoolNotStartedError",
     "PostgresBronzeRepository",
+    "PostgresGoldRepository",
     "PostgresQuarantineRepository",
     "PostgresSilverRepository",
     "QuarantineRecord",

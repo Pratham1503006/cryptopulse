@@ -10,6 +10,7 @@ from warehouse.repositories.base import GoldRepository as GoldRepository
 from warehouse.repositories.base import QuarantineRepository as QuarantineRepository
 from warehouse.repositories.base import SilverRepository as SilverRepository
 from warehouse.repositories.bronze import PostgresBronzeRepository as PostgresBronzeRepository
+from warehouse.repositories.gold import PostgresGoldRepository as PostgresGoldRepository
 from warehouse.repositories.quarantine import (
     PostgresQuarantineRepository as PostgresQuarantineRepository,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "BronzeRepository",
     "GoldRepository",
     "PostgresBronzeRepository",
+    "PostgresGoldRepository",
     "PostgresQuarantineRepository",
     "PostgresSilverRepository",
     "QuarantineRepository",

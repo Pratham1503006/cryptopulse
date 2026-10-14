@@ -5,8 +5,8 @@ from collections.abc import Sequence
 from datetime import datetime
 
 from common.contracts import (
-    BusinessInformation,
     InternalEvent,
+    MarketWindow,
     TrustedEvent,
     ValidationFailure,
 )
@@ -52,13 +52,79 @@ class SilverRepository(ABC):
         """
         raise NotImplementedError(f"{type(self).__name__} does not support get()")
 
+    async def read_window(
+        self,
+        symbol: str,
+        window_start: datetime,
+        window_end: datetime,
+        limit: int = 1_000_000,
+    ) -> Sequence[TrustedEvent]:
+        """Read the trusted events belonging to one trading symbol and window.
+
+        Used by the Gold processing engine to recompute a single window from
+        trusted data only (late-arrival handling). Optional capability:
+        implementations that support a targeted query override this method.
+        The default raises NotImplementedError so existing implementations
+        remain backward-compatible.
+
+        The window is half-open ``[window_start, window_end)`` and ordering
+        is deterministic by ``(trade_timestamp, event_id)``.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support read_window()")
+
 
 class GoldRepository(ABC):
-    @abstractmethod
-    async def write(self, info: BusinessInformation) -> None: ...
+    """Boundary for persisting and reading Gold business information.
+
+    Gold is derived exclusively from trusted (Silver) events. This boundary
+    stores aggregates only; it never performs aggregation itself (business
+    rules live in the processing engine).
+    """
 
     @abstractmethod
-    async def query(self, metric_name: str, limit: int = 100) -> Sequence[BusinessInformation]: ...
+    async def upsert(self, window: MarketWindow) -> None:
+        """Persist (insert or update) one market window aggregate.
+
+        Idempotent per ``window_id``: recomputing a window replaces the
+        existing aggregate in place, so replay and late-arrival recomputation
+        never create duplicate rows.
+        """
+        ...
+
+    @abstractmethod
+    async def read(
+        self,
+        symbol: str | None = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> Sequence[MarketWindow]:
+        """Read market windows, optionally filtered by symbol."""
+        ...
+
+    async def get(self, window_id: str) -> MarketWindow | None:
+        """Fetch one window by its stable technical identity.
+
+        Optional capability: implementations that support targeted lookup
+        override this method. The default raises NotImplementedError so
+        existing implementations remain backward-compatible.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support get()")
+
+    async def latest_by_symbol(self, limit: int = 100) -> Sequence[MarketWindow]:
+        """Return the most recent window per symbol (one row per symbol).
+
+        Optional capability used by analytics surfaces; the default raises
+        NotImplementedError so minimal implementations remain compatible.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support latest_by_symbol()")
+
+    async def list_symbols(self) -> Sequence[str]:
+        """Return the distinct symbols present in Gold.
+
+        Optional capability used by analytics surfaces; the default raises
+        NotImplementedError so minimal implementations remain compatible.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support list_symbols()")
 
 
 class QuarantineRepository(ABC):

@@ -17,6 +17,8 @@ from common.contracts.events import EventType as EventType
 from common.contracts.events import InternalEvent as InternalEvent
 from common.contracts.events import TradeSide as TradeSide
 from common.contracts.events import TrustedEvent as TrustedEvent
+from common.contracts.gold import MarketWindow as MarketWindow
+from common.contracts.gold import window_id_for as window_id_for
 from common.exceptions import ConfigurationError as ConfigurationError
 from common.exceptions import ConnectionError as ConnectionError
 from common.exceptions import CryptoPulseError as CryptoPulseError
@@ -41,8 +43,10 @@ __all__ = [
     "BusinessInformation",
     "EventType",
     "InternalEvent",
+    "MarketWindow",
     "TradeSide",
     "TrustedEvent",
+    "window_id_for",
     # Exceptions
     "ConfigurationError",
     "ConnectionError",

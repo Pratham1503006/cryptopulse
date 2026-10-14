@@ -26,6 +26,7 @@ exception hierarchy so callers never depend on driver types.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 
 import asyncpg
 
@@ -57,6 +58,14 @@ _SELECT_BY_EVENT_ID_SQL = "SELECT {columns} FROM silver.events WHERE event_id = 
 
 _READ_SQL = (
     "SELECT {columns} FROM silver.events ORDER BY validated_at, event_id OFFSET $1 LIMIT $2".format(
+        columns=", ".join(SILVER_COLUMNS),
+    )
+)
+
+_READ_WINDOW_SQL = (
+    "SELECT {columns} FROM silver.events "
+    "WHERE symbol = $1 AND trade_timestamp >= $2 AND trade_timestamp < $3 "
+    "ORDER BY trade_timestamp, event_id LIMIT $4".format(
         columns=", ".join(SILVER_COLUMNS),
     )
 )
@@ -168,6 +177,48 @@ class PostgresSilverRepository(SilverRepository):
         if row is None:
             return None
         return _map_rows([row], context=f"get:{event_id}")[0]
+
+    async def read_window(
+        self,
+        symbol: str,
+        window_start: datetime,
+        window_end: datetime,
+        limit: int = 1_000_000,
+    ) -> Sequence[TrustedEvent]:
+        """Read trusted events for one symbol within a half-open window.
+
+        The window is ``[window_start, window_end)`` on ``trade_timestamp``
+        and ordering is deterministic by ``(trade_timestamp, event_id)``, so
+        recomputing a window's aggregate is reproducible.
+
+        Args:
+            symbol: The trading pair to select.
+            window_start: Inclusive UTC lower bound (on trade_timestamp).
+            window_end: Exclusive UTC upper bound (on trade_timestamp).
+            limit: Maximum number of rows to return (>= 1).
+
+        Raises:
+            ValueError: If limit is invalid.
+            StorageError: If rows cannot be read or reconstructed.
+        """
+        if limit < 1:
+            raise ValueError("limit must be >= 1")
+        try:
+            async with self._pool.acquire() as connection:
+                rows = await connection.fetch(
+                    _READ_WINDOW_SQL, symbol, window_start, window_end, limit
+                )
+        except asyncpg.PostgresError as exc:
+            logger.error(
+                "silver_read_window_failed",
+                symbol=symbol,
+                error=str(exc),
+            )
+            raise StorageError(
+                "failed to read window events from Silver",
+                detail=str(exc),
+            ) from exc
+        return _map_rows(rows, context=f"read_window:{symbol}")
 
 
 def _map_rows(rows: Sequence[asyncpg.Record], context: str) -> list[TrustedEvent]:
